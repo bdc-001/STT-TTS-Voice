@@ -15,6 +15,15 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import Dashboard from "@/pages/Dashboard";
 import NotFound from "@/pages/not-found";
 
+// Platform Pages
+import PlatformHome from "@/pages/platform/PlatformHome";
+import VoiceLibrary from "@/pages/platform/VoiceLibrary";
+import VoiceStudio from "@/pages/platform/VoiceStudio";
+import STTPlayground from "@/pages/platform/STTPlayground";
+import TTSPlayground from "@/pages/platform/TTSPlayground";
+import Analytics from "@/pages/platform/Analytics";
+import ComplianceManager from "@/pages/platform/ComplianceManager";
+
 function Router() {
   return (
     <Switch>
@@ -28,6 +37,16 @@ function Router() {
       <Route path="/signup" component={SignUp} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/dashboard" component={Dashboard} />
+      
+      {/* Platform Routes */}
+      <Route path="/platform" component={PlatformHome} />
+      <Route path="/platform/voices/library" component={VoiceLibrary} />
+      <Route path="/platform/voices/studio" component={VoiceStudio} />
+      <Route path="/platform/stt/playground" component={STTPlayground} />
+      <Route path="/platform/tts/playground" component={TTSPlayground} />
+      <Route path="/platform/analytics" component={Analytics} />
+      <Route path="/platform/compliance" component={ComplianceManager} />
+      
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>

@@ -66,8 +66,8 @@ const apiSections = [
     description: "Convert speech to text with high accuracy",
     endpoints: [
       { method: "POST", path: "/v1/stt/transcribe", description: "Transcribe audio file" },
-      { method: "WSS", path: "/v1/stt/stream", description: "Real-time streaming STT" },
-      { method: "GET", path: "/v1/stt/languages", description: "Get supported languages" }
+      { method: "GET", path: "/v1/stt/languages", description: "Get supported languages" },
+      { method: "GET", path: "/v1/stt/formats", description: "Get supported audio formats" }
     ]
   },
   {

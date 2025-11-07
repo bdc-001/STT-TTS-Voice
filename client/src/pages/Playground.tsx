@@ -11,7 +11,6 @@ import { Slider } from "@/components/ui/slider";
 import { 
   Play, 
   Pause,
-  Square,
   Mic, 
   Upload, 
   Volume2, 
@@ -26,7 +25,6 @@ import { useState } from "react";
 
 export default function Playground() {
   const [activeTab, setActiveTab] = useState("stt");
-  const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sttTranscript, setSttTranscript] = useState("");
   const [ttsText, setTtsText] = useState("Welcome to the Convin Voice AI Platform. Experience the power of natural speech synthesis and accurate transcription.");
@@ -51,19 +49,6 @@ export default function Playground() {
     { id: "emma-neural", name: "Emma", gender: "Female", accent: "UK English" },
     { id: "alex-neural", name: "Alex", gender: "Male", accent: "Canadian" }
   ];
-
-  const handleRecord = () => {
-    setIsRecording(!isRecording);
-    console.log(isRecording ? 'Stopped recording' : 'Started recording');
-    
-    if (!isRecording) {
-      // Mock recording simulation - todo: remove mock functionality
-      setTimeout(() => {
-        setSttTranscript("This is a sample transcription from the playground. The Convin Voice AI platform provides high-accuracy speech-to-text conversion with real-time processing capabilities.");
-        setIsRecording(false);
-      }, 3000);
-    }
-  };
 
   const handleUpload = () => {
     console.log('File upload triggered');
@@ -142,7 +127,7 @@ audio.play();`;
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Interactive playground to test Speech-to-Text and Text-to-Speech APIs with real-time results.
+              Interactive playground to test Speech-to-Text and Text-to-Speech APIs with file uploads.
             </p>
           </div>
         </div>
@@ -266,27 +251,9 @@ audio.play();`;
                   <div className="space-y-4">
                     <h3 className="text-xl font-semibold">Speech-to-Text Testing</h3>
                     
-                    {/* Recording Controls */}
+                    {/* Upload Controls */}
                     <div className="flex flex-wrap gap-4 items-center">
-                      <Button
-                        variant={isRecording ? "destructive" : "default"}
-                        onClick={handleRecord}
-                        data-testid="button-record"
-                      >
-                        {isRecording ? (
-                          <>
-                            <Square className="h-4 w-4 mr-2" />
-                            Stop Recording
-                          </>
-                        ) : (
-                          <>
-                            <Mic className="h-4 w-4 mr-2" />
-                            Start Recording
-                          </>
-                        )}
-                      </Button>
-
-                      <Button variant="outline" onClick={handleUpload} data-testid="button-upload">
+                      <Button variant="default" onClick={handleUpload} data-testid="button-upload">
                         <Upload className="h-4 w-4 mr-2" />
                         Upload File
                       </Button>
@@ -294,9 +261,9 @@ audio.play();`;
 
                     {/* Status */}
                     <div className="flex items-center gap-2 p-4 bg-muted/30 rounded-lg">
-                      <div className={`h-2 w-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
+                      <div className="h-2 w-2 rounded-full bg-gray-400" />
                       <span className="text-sm">
-                        {isRecording ? 'Recording audio...' : 'Ready to record'}
+                        Ready to upload audio file
                       </span>
                     </div>
 

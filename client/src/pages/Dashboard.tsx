@@ -18,7 +18,6 @@ import {
   Clock,
   FileText,
   Play,
-  Square,
   Upload,
   Download,
   Copy,
@@ -30,7 +29,6 @@ import {
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [isRecording, setIsRecording] = useState(false);
 
   // Mock data
   const usageStats = {
@@ -158,23 +156,15 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <Button 
-                      className="h-20 flex-col space-y-2"
-                      variant={isRecording ? "destructive" : "default"}
-                      onClick={() => setIsRecording(!isRecording)}
-                    >
-                      {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-                      <span>{isRecording ? "Stop Recording" : "Start STT"}</span>
+                    <Button className="h-20 flex-col space-y-2" variant="default">
+                      <Upload className="h-6 w-6" />
+                      <span>Upload for STT</span>
                     </Button>
                     <Button className="h-20 flex-col space-y-2" variant="outline">
                       <Volume2 className="h-6 w-6" />
                       <span>Generate TTS</span>
                     </Button>
                   </div>
-                  <Button className="w-full" variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Audio File
-                  </Button>
                 </CardContent>
               </Card>
 
@@ -233,15 +223,14 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       <Button 
                         className="w-full"
-                        variant={isRecording ? "destructive" : "default"}
-                        onClick={() => setIsRecording(!isRecording)}
+                        variant="default"
                       >
-                        {isRecording ? <Square className="h-4 w-4 mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
-                        {isRecording ? "Stop Recording" : "Start Recording"}
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Audio File
                       </Button>
                       <div className="bg-muted rounded-lg p-4 min-h-[100px]">
                         <p className="text-sm text-muted-foreground">
-                          {isRecording ? "Recording... Speak now" : "Click record to start transcribing"}
+                          Upload an audio file to start transcribing
                         </p>
                       </div>
                     </div>

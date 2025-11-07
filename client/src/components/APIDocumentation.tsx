@@ -7,36 +7,36 @@ import { useState } from "react";
 
 const codeExamples = {
   javascript: {
-    stt: `// Real-time Speech-to-Text
-const ws = new WebSocket('wss://api.convin.ai/v1/stt/stream');
-ws.onopen = () => {
-  ws.send(JSON.stringify({
-    config: {
-      language: 'en-US',
-      sampleRate: 16000,
-      enableDiarization: true
-    }
+    stt: `// Batch Speech-to-Text with File Upload
+async function transcribeAudio(audioFile) {
+  const formData = new FormData();
+  formData.append('audio', audioFile);
+  formData.append('config', JSON.stringify({
+    language: 'en-US',
+    enableDiarization: true,
+    customVocabulary: ['Convin', 'API']
   }));
-};
 
-// Send audio chunks
-navigator.mediaDevices.getUserMedia({ audio: true })
-  .then(stream => {
-    const recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = (event) => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(event.data);
-      }
-    };
-    recorder.start(100); // Send chunks every 100ms
+  const response = await fetch('https://api.convin.ai/v1/stt/transcribe', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    },
+    body: formData
   });
 
-// Handle transcripts
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log('Transcript:', data.transcript);
-  console.log('Speaker:', data.speaker);
-};`,
+  const result = await response.json();
+  console.log('Transcript:', result.transcript);
+  console.log('Segments:', result.segments);
+  return result;
+}
+
+// Usage
+const fileInput = document.querySelector('input[type="file"]');
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  transcribeAudio(file);
+});`,
     tts: `// Text-to-Speech API
 async function generateSpeech(text, voice = 'sarah-neural') {
   const response = await fetch('https://api.convin.ai/v1/tts/synthesize', {
@@ -60,44 +60,50 @@ async function generateSpeech(text, voice = 'sarah-neural') {
 }`
   },
   python: {
-    stt: `# Real-time Speech-to-Text with Python
-import asyncio
-import websockets
+    stt: `# Batch Speech-to-Text with File Upload
+import requests
 import json
-import pyaudio
 
-async def stream_audio():
-    uri = "wss://api.convin.ai/v1/stt/stream"
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
+def transcribe_audio(audio_file_path):
+    url = "https://api.convin.ai/v1/stt/transcribe"
+    headers = {
+        "Authorization": "Bearer YOUR_API_KEY"
+    }
     
-    async with websockets.connect(uri, extra_headers=headers) as websocket:
-        # Send configuration
-        config = {
-            "config": {
-                "language": "en-US",
-                "sampleRate": 16000,
-                "enableDiarization": True
-            }
-        }
-        await websocket.send(json.dumps(config))
+    # Prepare the multipart request
+    files = {
+        'audio': open(audio_file_path, 'rb')
+    }
+    
+    config = {
+        "language": "en-US",
+        "enableDiarization": True,
+        "customVocabulary": ["Convin", "API"]
+    }
+    
+    data = {
+        'config': json.dumps(config)
+    }
+    
+    # Send request
+    response = requests.post(url, headers=headers, files=files, data=data)
+    
+    if response.status_code == 200:
+        result = response.json()
+        print(f"Transcript: {result['transcript']}")
         
-        # Setup audio stream
-        audio = pyaudio.PyAudio()
-        stream = audio.open(
-            format=pyaudio.paInt16,
-            channels=1,
-            rate=16000,
-            input=True,
-            frames_per_buffer=1024
-        )
+        # Print speaker segments
+        for segment in result['segments']:
+            print(f"[{segment['startTime']}-{segment['endTime']}] "
+                  f"{segment['speaker']}: {segment['text']}")
         
-        while True:
-            data = stream.read(1024)
-            await websocket.send(data)
-            
-            response = await websocket.recv()
-            result = json.loads(response)
-            print(f"Transcript: {result['transcript']}")`,
+        return result
+    else:
+        print(f"Error: {response.status_code}")
+        return None
+
+# Usage
+transcribe_audio("path/to/audio.wav")`,
     tts: `# Text-to-Speech with Python
 import requests
 import io
@@ -136,7 +142,7 @@ def generate_speech(text, voice="sarah-neural"):
 curl -X POST https://api.convin.ai/v1/stt/transcribe \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: multipart/form-data" \\
-  -F "audio=@recording.wav" \\
+  -F "audio=@audio.wav" \\
   -F "config={
     \\"language\\": \\"en-US\\",
     \\"enableDiarization\\": true,
@@ -198,40 +204,60 @@ export default function APIDocumentation() {
   };
 
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16 space-y-4">
-          <Badge variant="secondary" className="mb-4">
+    <section className="py-20 lg:py-32 bg-gradient-to-b from-muted/10 via-background to-muted/10 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative">
+        <div className="text-center mb-16 lg:mb-20 space-y-6">
+          <Badge className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-500 border-purple-500/20">
             <Book className="h-3 w-3 mr-1" />
             API Documentation
           </Badge>
-          <h2 className="text-3xl lg:text-4xl font-bold">
+          <h2 className="text-3xl lg:text-5xl font-bold leading-tight">
             Get Started in{" "}
-            <span className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               Minutes
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Comprehensive documentation with code examples, SDKs, and interactive playground to help you integrate voice AI quickly.
           </p>
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <Card className="p-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Code2 className="h-5 w-5 text-primary" />
+          <Card className="p-6 lg:p-10 bg-white hover:bg-hover backdrop-blur-sm border border-border hover:border-primary/40 shadow-xl transition-all duration-300">
+            <CardHeader className="pb-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Code2 className="h-6 w-6 text-purple-500" />
+                </div>
                 Code Examples & Integration Guide
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs value={selectedExample} onValueChange={setSelectedExample} className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="stt" data-testid="tab-stt">Speech-to-Text</TabsTrigger>
-                  <TabsTrigger value="tts" data-testid="tab-tts">Text-to-Speech</TabsTrigger>
+              <Tabs value={selectedExample} onValueChange={setSelectedExample} className="space-y-8">
+                <TabsList className="grid w-full grid-cols-2 p-1.5 bg-muted/50 rounded-xl">
+                  <TabsTrigger 
+                    value="stt" 
+                    data-testid="tab-stt"
+                    className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                  >
+                    Speech-to-Text
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tts" 
+                    data-testid="tab-tts"
+                    className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
+                  >
+                    Text-to-Speech
+                  </TabsTrigger>
                 </TabsList>
 
-                <div className="flex gap-2 mb-4">
+                <div className="flex flex-wrap gap-2">
                   {Object.keys(codeExamples).map((lang) => (
                     <Button
                       key={lang}
@@ -239,6 +265,7 @@ export default function APIDocumentation() {
                       size="sm"
                       onClick={() => setSelectedLanguage(lang)}
                       data-testid={`button-lang-${lang}`}
+                      className={selectedLanguage === lang ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600" : ""}
                     >
                       {lang === 'javascript' ? 'JavaScript' : lang === 'python' ? 'Python' : 'cURL'}
                     </Button>
@@ -303,53 +330,74 @@ export default function APIDocumentation() {
               </Tabs>
 
               {/* Quick Start Links */}
-              <div className="grid md:grid-cols-3 gap-6 mt-12 pt-8 border-t">
-                <Card className="hover-elevate" data-testid="card-quickstart">
+              <div className="grid md:grid-cols-3 gap-6 mt-12 pt-8 border-t border-border/50">
+                <Card className="group hover:shadow-xl hover:-translate-y-1 hover:bg-hover transition-all duration-300 bg-white border border-border hover:border-primary/40" data-testid="card-quickstart">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-primary" />
+                      <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                        <Zap className="h-5 w-5 text-primary" />
+                      </div>
                       Quick Start
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       Get your API key and make your first request in under 5 minutes.
                     </p>
-                    <Button variant="outline" size="sm" data-testid="button-view-quickstart">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      data-testid="button-view-quickstart"
+                      className="hover:bg-hover hover:border-primary/50"
+                    >
                       View Guide
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="hover-elevate" data-testid="card-sdks">
+                <Card className="group hover:shadow-xl hover:-translate-y-1 hover:bg-hover transition-all duration-300 bg-white border border-border hover:border-primary/40" data-testid="card-sdks">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Code2 className="h-4 w-4 text-chart-2" />
+                      <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                        <Code2 className="h-5 w-5 text-primary" />
+                      </div>
                       SDKs & Libraries
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       Official SDKs for Python, JavaScript, Go, and more languages.
                     </p>
-                    <Button variant="outline" size="sm" data-testid="button-download-sdks">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      data-testid="button-download-sdks"
+                      className="hover:bg-hover hover:border-primary/50"
+                    >
                       Download SDKs
                     </Button>
                   </CardContent>
                 </Card>
 
-                <Card className="hover-elevate" data-testid="card-playground">
+                <Card className="group hover:shadow-xl hover:-translate-y-1 hover:bg-hover transition-all duration-300 bg-white border border-border hover:border-primary/40" data-testid="card-playground">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Play className="h-4 w-4 text-green-500" />
+                      <div className="p-2 bg-primary/10 rounded-lg group-hover:scale-110 group-hover:bg-primary/20 transition-all">
+                        <Play className="h-5 w-5 text-primary" />
+                      </div>
                       API Playground
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                       Test API endpoints interactively with our web-based playground.
                     </p>
-                    <Button variant="outline" size="sm" data-testid="button-open-playground">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      data-testid="button-open-playground"
+                      className="hover:bg-hover hover:border-primary/50"
+                    >
                       Open Playground
                     </Button>
                   </CardContent>

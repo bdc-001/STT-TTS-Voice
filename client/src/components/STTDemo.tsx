@@ -3,47 +3,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Mic, Upload, Play, Square, Volume2 } from "lucide-react";
+import { Mic, Upload } from "lucide-react";
 import { useState } from "react";
 
 export default function STTDemo() {
-  const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("en-US");
-  
-  // Mock data for demo purposes - todo: remove mock functionality
-  const mockTranscripts = [
-    "Hello, welcome to the Convin Voice AI platform demonstration.",
-    "This is a real-time speech-to-text conversion showing the capabilities of our API.",
-    "The system supports multiple languages and provides high accuracy transcription with speaker diarization.",
-  ];
-
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    console.log('Recording started');
-    
-    // Mock recording simulation - todo: remove mock functionality
-    let transcriptIndex = 0;
-    const interval = setInterval(() => {
-      if (transcriptIndex < mockTranscripts.length) {
-        setTranscript(prev => prev + (prev ? " " : "") + mockTranscripts[transcriptIndex]);
-        transcriptIndex++;
-      } else {
-        setIsRecording(false);
-        clearInterval(interval);
-      }
-    }, 2000);
-  };
-
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    console.log('Recording stopped');
-  };
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleFileUpload = () => {
     console.log('File upload triggered');
+    setIsProcessing(true);
     // Mock file processing - todo: remove mock functionality
-    setTranscript("This is a sample transcription from an uploaded audio file. The Convin API processes your audio and returns accurate text with timestamps and speaker identification.");
+    setTimeout(() => {
+      setTranscript("This is a sample transcription from an uploaded audio file. The Convin API processes your audio and returns accurate text with timestamps and speaker identification.");
+      setIsProcessing(false);
+    }, 1500);
   };
 
   const clearTranscript = () => {
@@ -51,37 +26,45 @@ export default function STTDemo() {
   };
 
   return (
-    <section className="py-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12 space-y-4">
-          <Badge variant="secondary" className="mb-4">
+    <section className="py-20 lg:py-32 bg-gradient-to-b from-muted/10 via-background to-muted/10 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-10 right-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative">
+        <div className="text-center mb-12 lg:mb-16 space-y-6">
+          <Badge className="bg-gradient-to-r from-blue-500/10 to-blue-600/10 text-blue-500 border-blue-500/20">
             <Mic className="h-3 w-3 mr-1" />
             Speech-to-Text Demo
           </Badge>
-          <h2 className="text-3xl lg:text-4xl font-bold">
+          <h2 className="text-3xl lg:text-5xl font-bold leading-tight">
             Try Our STT API{" "}
-            <span className="bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
               Live
             </span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Experience real-time transcription with high accuracy, speaker detection, and multi-language support.
+          <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Upload audio files for accurate transcription with speaker detection and multi-language support.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <Card className="p-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mic className="h-5 w-5 text-primary" />
+        <div className="max-w-5xl mx-auto">
+          <Card className="p-6 lg:p-10 bg-white hover:bg-hover backdrop-blur-sm border border-border hover:border-primary/40 shadow-xl transition-all duration-300">
+            <CardHeader className="pb-8">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Mic className="h-6 w-6 text-blue-500" />
+                </div>
                 Interactive STT Playground
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               {/* Controls */}
               <div className="flex flex-wrap gap-4 items-center">
                 <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
-                  <SelectTrigger className="w-40" data-testid="select-language">
+                  <SelectTrigger className="w-52 bg-background/50 backdrop-blur" data-testid="select-language">
                     <SelectValue placeholder="Language" />
                   </SelectTrigger>
                   <SelectContent>
@@ -95,31 +78,13 @@ export default function STTDemo() {
                 </Select>
 
                 <Button
-                  variant={isRecording ? "destructive" : "default"}
-                  onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  data-testid="button-record-toggle"
-                  className="flex items-center gap-2"
-                >
-                  {isRecording ? (
-                    <>
-                      <Square className="h-4 w-4" />
-                      Stop Recording
-                    </>
-                  ) : (
-                    <>
-                      <Mic className="h-4 w-4" />
-                      Start Recording
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg shadow-blue-500/30"
                   onClick={handleFileUpload}
+                  disabled={isProcessing}
                   data-testid="button-upload-file"
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Audio
+                  {isProcessing ? 'Processing...' : 'Upload Audio'}
                 </Button>
 
                 {transcript && (
@@ -127,6 +92,7 @@ export default function STTDemo() {
                     variant="ghost"
                     onClick={clearTranscript}
                     data-testid="button-clear-transcript"
+                    className="hover:bg-muted/50"
                   >
                     Clear
                   </Button>
@@ -134,38 +100,38 @@ export default function STTDemo() {
               </div>
 
               {/* Status */}
-              <div className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'}`} />
-                <span className="text-sm text-muted-foreground">
-                  {isRecording ? 'Recording in progress...' : 'Ready to record'}
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-xl">
+                <div className={`h-3 w-3 rounded-full ${isProcessing ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
+                <span className="text-sm font-medium">
+                  {isProcessing ? 'Processing audio...' : 'Ready to upload audio file'}
                 </span>
               </div>
 
               {/* Transcript Output */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Live Transcript</label>
+              <div className="space-y-3">
+                <label className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Transcript</label>
                 <Textarea
                   value={transcript}
-                  placeholder="Your transcribed text will appear here..."
-                  className="min-h-32 resize-none"
+                  placeholder="Your transcribed text will appear here with timestamps and speaker identification..."
+                  className="min-h-40 resize-none bg-background/50 backdrop-blur border-border/50 focus:border-blue-500/50 transition-colors"
                   readOnly
                   data-testid="textarea-transcript"
                 />
               </div>
 
               {/* Features showcase */}
-              <div className="grid md:grid-cols-3 gap-4 pt-4 border-t">
-                <div className="text-center p-4">
-                  <div className="text-2xl font-bold text-primary">99.2%</div>
-                  <div className="text-sm text-muted-foreground">Accuracy Rate</div>
+              <div className="grid md:grid-cols-3 gap-6 pt-6 border-t border-border/50">
+                <div className="text-center p-6 bg-white hover:bg-hover rounded-2xl border border-border hover:border-primary/40 transition-all duration-300">
+                  <div className="text-4xl font-bold text-primary">99.2%</div>
+                  <div className="text-sm text-muted-foreground mt-2">Accuracy Rate</div>
                 </div>
-                <div className="text-center p-4">
-                  <div className="text-2xl font-bold text-chart-2">285ms</div>
-                  <div className="text-sm text-muted-foreground">Avg Latency</div>
+                <div className="text-center p-6 bg-white hover:bg-hover rounded-2xl border border-border hover:border-primary/40 transition-all duration-300">
+                  <div className="text-4xl font-bold text-accent">285ms</div>
+                  <div className="text-sm text-muted-foreground mt-2">Avg Latency</div>
                 </div>
-                <div className="text-center p-4">
-                  <div className="text-2xl font-bold text-green-500">36+</div>
-                  <div className="text-sm text-muted-foreground">Languages</div>
+                <div className="text-center p-6 bg-white hover:bg-hover rounded-2xl border border-border hover:border-primary/40 transition-all duration-300">
+                  <div className="text-4xl font-bold text-chart-3">36+</div>
+                  <div className="text-sm text-muted-foreground mt-2">Languages</div>
                 </div>
               </div>
             </CardContent>

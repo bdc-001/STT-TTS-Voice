@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,70 +17,78 @@
   --elevate-2: rgba(0,0,0, .08);
 
   /* Convin Brand Colors */
-  --background: 0 0% 100%; /* #FFFFFF */
+  --background: 0 0% 100%; /* #FFFFFF - White */
 
-  --foreground: 217 65% 6%; /* #0B0C10 - Dark Navy */
+  --foreground: 0 0% 20%; /* #333333 - Text Color */
 
-  --border: 220 13% 91%;
+  --border: 0 0% 90%;
 
-  --card: 210 20% 98%; /* #F7F8FA - Light Gray */
+  --card: 0 0% 100%; /* #FFFFFF - White */
 
-  --card-foreground: 217 65% 6%; /* #0B0C10 */
+  --card-foreground: 0 0% 20%; /* #333333 */
 
-  --card-border: 220 13% 93%;
+  --card-border: 0 0% 93%;
 
-  --sidebar: 220 13% 95%;
+  --sidebar: 0 0% 100%; /* White */
 
-  --sidebar-foreground: 217 65% 6%;
+  --sidebar-foreground: 0 0% 20%;
 
-  --sidebar-border: 220 13% 88%;
+  --sidebar-border: 0 0% 90%;
 
-  --sidebar-primary: 217 89% 51%; /* #1A73E8 - Primary Blue */
+  --sidebar-primary: 217 89% 53%; /* #1A62F2 - Primary Blue */
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 13% 88%;
+  --sidebar-accent: 220 89% 86%; /* #BAD0FB - Hover State */
 
-  --sidebar-accent-foreground: 217 65% 6%;
+  --sidebar-accent-foreground: 0 0% 20%;
 
-  --sidebar-ring: 217 89% 51%;
+  --sidebar-ring: 217 89% 53%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 217 65% 6%;
+  --popover-foreground: 0 0% 20%;
 
-  --popover-border: 220 13% 87%;
+  --popover-border: 0 0% 90%;
 
-  --primary: 217 89% 51%; /* #1A73E8 - Convin Primary Blue */
+  --primary: 217 89% 53%; /* #1A62F2 - Primary Blue */
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 13% 86%;
+  --secondary: 0 0% 95%;
 
-  --secondary-foreground: 217 65% 6%;
+  --secondary-foreground: 0 0% 20%;
 
-  --muted: 210 20% 96%; /* #F7F8FA */
+  --muted: 0 0% 100%; /* White */
 
-  --muted-foreground: 220 9% 46%; /* #5F6368 - Neutral Gray */
+  --muted-foreground: 0 0% 40%; /* #666666 - Subheading Color */
 
-  --accent: 48 100% 66%; /* #FFD54F - Accent Yellow */
+  --accent: 41 95% 51%; /* #F8AA0D - Accent Yellow */
 
-  --accent-foreground: 217 65% 6%;
+  --accent-foreground: 0 0% 20%;
 
-  --destructive: 0 85% 60%;
+  --destructive: 359 93% 60%; /* #F93739 - Error Color */
 
-  --destructive-foreground: 0 0% 98%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 220 13% 80%;
-  --ring: 217 89% 51%; /* #1A73E8 */
-  --chart-1: 217 89% 51%; /* #1A73E8 */
-  --chart-2: 260 60% 55%;
-  --chart-3: 142 80% 50%;
-  --chart-4: 48 100% 66%; /* #FFD54F - Accent Yellow */
-  --chart-5: 300 70% 60%;
+  --hover: 220 89% 86%; /* #BAD0FB - Hover State */
+  --hover-foreground: 0 0% 20%;
 
-  /* Convin Brand Typography - Inter primary, Open Sans backup */
-  --font-sans: Inter, "Open Sans", sans-serif;
+  --input: 0 0% 90%;
+  --ring: 217 89% 53%; /* #1A62F2 */
+  --chart-1: 217 89% 53%; /* #1A62F2 - Primary Blue */
+  --chart-2: 294 99% 59%; /* #F030FE - Purple Accent */
+  --chart-3: 145 75% 44%; /* #1AC468 - Success Green */
+  --chart-4: 41 95% 51%; /* #F8AA0D - Accent Yellow */
+  --chart-5: 359 93% 60%; /* #F93739 - Error Red */
+  
+  /* Voice AI Gradient Colors - Blue to White */
+  --gradient-blue: 217 89% 53%; /* #1A62F2 */
+  --gradient-blue-light: 217 89% 70%;
+  --gradient-white: 0 0% 100%;
+
+  /* Convin Brand Typography - Figtree primary, Inter backup */
+  --font-sans: Figtree, Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: .5rem; /* 8px - Convin brand standard */
@@ -136,67 +146,75 @@
   --elevate-2: rgba(255,255,255, .09);
 
   /* Convin Dark Mode Colors */
-  --background: 217 65% 6%; /* #0B0C10 - Dark Navy */
+  --background: 0 0% 7%; /* Dark Background */
 
-  --foreground: 0 0% 100%;
+  --foreground: 0 0% 95%;
 
-  --border: 220 13% 15%;
+  --border: 0 0% 20%;
 
-  --card: 220 15% 10%;
+  --card: 0 0% 10%;
 
-  --card-foreground: 0 0% 100%;
+  --card-foreground: 0 0% 95%;
 
-  --card-border: 220 13% 18%;
+  --card-border: 0 0% 20%;
 
-  --sidebar: 217 65% 4%;
+  --sidebar: 0 0% 8%;
 
-  --sidebar-foreground: 0 0% 100%;
+  --sidebar-foreground: 0 0% 95%;
 
-  --sidebar-border: 220 13% 12%;
+  --sidebar-border: 0 0% 15%;
 
-  --sidebar-primary: 217 89% 51%; /* #1A73E8 - Primary Blue */
+  --sidebar-primary: 217 89% 53%; /* #1A62F2 - Primary Blue */
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 220 15% 14%;
+  --sidebar-accent: 220 89% 86%; /* #BAD0FB - Hover State */
 
-  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-accent-foreground: 0 0% 20%;
 
-  --sidebar-ring: 217 89% 51%;
+  --hover: 220 89% 86%; /* #BAD0FB - Hover State */
+  --hover-foreground: 0 0% 20%;
 
-  --popover: 220 15% 12%;
+  --sidebar-ring: 217 89% 53%;
 
-  --popover-foreground: 0 0% 100%;
+  --popover: 0 0% 12%;
 
-  --popover-border: 220 13% 20%;
+  --popover-foreground: 0 0% 95%;
 
-  --primary: 217 89% 51%; /* #1A73E8 - Convin Primary Blue */
+  --popover-border: 0 0% 20%;
+
+  --primary: 217 89% 53%; /* #1A62F2 - Primary Blue */
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 15% 16%;
+  --secondary: 0 0% 18%;
 
-  --secondary-foreground: 0 0% 100%;
+  --secondary-foreground: 0 0% 95%;
 
-  --muted: 220 15% 14%;
+  --muted: 0 0% 15%;
 
-  --muted-foreground: 220 9% 64%; /* #9AA0A6 - Neutral Gray */
+  --muted-foreground: 0 0% 60%; /* Lighter gray for dark mode */
 
-  --accent: 48 100% 66%; /* #FFD54F - Accent Yellow */
+  --accent: 41 95% 51%; /* #F8AA0D - Accent Yellow */
 
-  --accent-foreground: 217 65% 6%;
+  --accent-foreground: 0 0% 10%;
 
-  --destructive: 0 85% 60%;
+  --destructive: 359 93% 60%; /* #F93739 - Error Color */
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 220 13% 22%;
-  --ring: 217 89% 51%;
-  --chart-1: 217 89% 51%; /* #1A73E8 */
-  --chart-2: 260 50% 65%;
-  --chart-3: 142 70% 60%;
-  --chart-4: 48 100% 66%; /* #FFD54F */
-  --chart-5: 300 60% 70%;
+  --input: 0 0% 22%;
+  --ring: 217 89% 53%;
+  --chart-1: 217 89% 53%; /* #1A62F2 - Primary Blue */
+  --chart-2: 294 99% 59%; /* #F030FE - Purple Accent */
+  --chart-3: 145 75% 44%; /* #1AC468 - Success Green */
+  --chart-4: 41 95% 51%; /* #F8AA0D - Accent Yellow */
+  --chart-5: 359 93% 60%; /* #F93739 - Error Red */
+  
+  /* Voice AI Gradient Colors - Blue to White (adjusted for dark mode) */
+  --gradient-blue: 217 89% 53%;
+  --gradient-blue-light: 217 89% 70%;
+  --gradient-white: 0 0% 95%;
 
   --shadow-2xs: 0px 2px 0px 0px hsl(220 13% 15% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(220 13% 15% / 0.00);
@@ -328,4 +346,64 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}
+
+/* Voice AI Gradient Animations */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes wave-flow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Gradient Background Utilities - Blue to White */
+.gradient-voice-ai {
+  background: linear-gradient(135deg, hsl(var(--gradient-blue)) 0%, hsl(var(--gradient-blue-light)) 50%, hsl(var(--gradient-white)) 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+.gradient-voice-ai-static {
+  background: linear-gradient(135deg, hsl(var(--gradient-blue)) 0%, hsl(var(--gradient-blue-light)) 50%, hsl(var(--gradient-white)) 100%);
+}
+
+/* Success Color Utility */
+.text-success {
+  color: hsl(var(--chart-3));
+}
+
+.bg-success {
+  background-color: hsl(var(--chart-3));
 }

@@ -9,17 +9,17 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 flex h-16 items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+      <div className="container mx-auto px-4 flex h-16 lg:h-18 items-center justify-between">
         {/* Logo */}
         <Link href="/" data-testid="link-home">
-          <div className="flex items-center gap-2 hover-elevate rounded-md px-2 py-1">
-            <div className="bg-gradient-to-r from-primary to-chart-2 p-2 rounded-md">
+          <div className="flex items-center gap-2.5 hover:opacity-80 transition-opacity rounded-md px-2 py-1.5">
+            <div className="bg-primary p-2 rounded-lg shadow-lg shadow-primary/20">
               <Mic className="h-5 w-5 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-lg">Convin</span>
-              <span className="text-xs text-muted-foreground -mt-1">Voice AI</span>
+              <span className="font-bold text-lg text-primary">Convin</span>
+              <span className="text-xs text-muted-foreground -mt-1 font-medium">Voice AI</span>
             </div>
           </div>
         </Link>
@@ -48,10 +48,9 @@ export default function Header() {
           </Link>
           <Link href="/contact">
             <Button 
-              variant="default" 
               size="sm" 
               data-testid="button-book-demo"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase text-xs rounded-lg transition-all duration-200"
+              className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs rounded-lg transition-all duration-200 shadow-lg shadow-primary/30 px-4"
             >
               Book a Demo
             </Button>

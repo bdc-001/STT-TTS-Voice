@@ -19,9 +19,9 @@ const comparisonFeatures = [
     features: [
       { name: "STT Minutes/Month", free: "1,000", pro: "10,000", enterprise: "Unlimited" },
       { name: "TTS Characters/Month", free: "10,000", pro: "100,000", enterprise: "Unlimited" },
-      { name: "Real-time Streaming", free: false, pro: true, enterprise: true },
+      { name: "File Upload Processing", free: true, pro: true, enterprise: true },
       { name: "Batch Processing", free: true, pro: true, enterprise: true },
-      { name: "WebSocket Support", free: false, pro: true, enterprise: true }
+      { name: "Multiple Audio Formats", free: true, pro: true, enterprise: true }
     ]
   },
   {
