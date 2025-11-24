@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Zap, Check } from "lucide-react";
+import { auth } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -22,30 +24,62 @@ export default function SignUp() {
     agreeToTerms: false,
   });
 
+  const { toast } = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match");
+      toast({
+        title: "Error",
+        description: "Passwords don't match",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions");
+      toast({
+        title: "Error",
+        description: "Please agree to the terms and conditions",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     setIsLoading(true);
-    
-    // TODO: Implement actual authentication
-    console.log("Sign up attempt:", formData);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const response = await auth.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.data.success) {
+        const { api_key } = response.data.data;
+        if (api_key) {
+          localStorage.setItem("apiKey", api_key);
+        }
+        localStorage.setItem("user", JSON.stringify(response.data.data.user));
+
+        toast({
+          title: "Success",
+          description: "Account created successfully",
+        });
+
+        window.location.href = "/dashboard";
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
-    }, 1000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +99,7 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <Card className="border-2">
@@ -80,7 +114,7 @@ export default function SignUp() {
                 Start building with Convin Voice AI today
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -99,7 +133,7 @@ export default function SignUp() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <div className="relative">
@@ -116,7 +150,7 @@ export default function SignUp() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
@@ -146,7 +180,7 @@ export default function SignUp() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
                   <div className="relative">
@@ -176,7 +210,7 @@ export default function SignUp() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start space-x-2">
                     <Checkbox
@@ -201,9 +235,9 @@ export default function SignUp() {
                     </div>
                   </div>
                 </div>
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-to-r from-primary to-chart-2 hover:opacity-90"
                   disabled={isLoading}
                 >
@@ -211,9 +245,9 @@ export default function SignUp() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
-              
+
               <Separator />
-              
+
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <Link href="/signin" className="text-primary hover:underline font-medium">
@@ -224,7 +258,7 @@ export default function SignUp() {
           </Card>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

@@ -23,19 +23,58 @@ import {
   Calendar
 } from "lucide-react";
 
+import { useState, useEffect } from "react";
+import { user, tts } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
 export default function Analytics() {
+  const [usageData, setUsageData] = useState<any>(null);
+  const [voicesCount, setVoicesCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usageRes, voicesRes] = await Promise.all([
+          user.getUsage(),
+          tts.getVoices()
+        ]);
+
+        if (usageRes.data.success) {
+          setUsageData(usageRes.data.data);
+        }
+
+        if (voicesRes.data.success) {
+          setVoicesCount(voicesRes.data.data.length);
+        }
+      } catch (error) {
+        console.error("Failed to fetch analytics:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load analytics data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const kpiData = [
     {
       title: "Total Audio Hours",
-      value: "1,247",
-      change: "+12.5%",
+      value: usageData ? (usageData.total_stt_minutes / 60).toFixed(1) : "0",
+      change: "+12.5%", // Mock
       trend: "up",
       icon: Clock,
       color: "text-blue-500"
     },
     {
       title: "Avg Latency",
-      value: "245ms",
+      value: "245ms", // Mock
       change: "-5.2%",
       trend: "up",
       icon: TrendingUp,
@@ -43,7 +82,7 @@ export default function Analytics() {
     },
     {
       title: "Word Error Rate",
-      value: "2.4%",
+      value: "2.4%", // Mock
       change: "-0.8%",
       trend: "up",
       icon: BarChart3,
@@ -51,7 +90,7 @@ export default function Analytics() {
     },
     {
       title: "Emotion Accuracy",
-      value: "94.7%",
+      value: "94.7%", // Mock
       change: "+3.1%",
       trend: "up",
       icon: Heart,
@@ -59,18 +98,18 @@ export default function Analytics() {
     },
     {
       title: "Voices Created",
-      value: "47",
-      change: "+8",
+      value: voicesCount.toString(),
+      change: "+2", // Mock
       trend: "up",
       icon: Volume2,
       color: "text-purple-500"
     },
     {
-      title: "Active Users",
-      value: "2,341",
-      change: "+15.3%",
+      title: "Total Cost",
+      value: usageData ? `$${usageData.total_cost.toFixed(2)}` : "$0.00",
+      change: "+15.3%", // Mock
       trend: "up",
-      icon: Users,
+      icon: Users, // Using Users icon for Cost as placeholder or change to DollarSign if available
       color: "text-orange-500"
     }
   ];
@@ -144,9 +183,8 @@ export default function Analytics() {
                       ) : (
                         <TrendingDown className="h-4 w-4 text-red-500" />
                       )}
-                      <span className={`text-sm font-medium ${
-                        kpi.trend === "up" ? "text-green-500" : "text-red-500"
-                      }`}>
+                      <span className={`text-sm font-medium ${kpi.trend === "up" ? "text-green-500" : "text-red-500"
+                        }`}>
                         {kpi.change}
                       </span>
                       <span className="text-xs text-muted-foreground ml-1">vs last month</span>

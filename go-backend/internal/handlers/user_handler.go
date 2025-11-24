@@ -122,6 +122,7 @@ func (h *UserHandler) UpdateAPIKey(c *gin.Context) {
 	var req struct {
 		Name        string `json:"name,omitempty"`
 		Permissions string `json:"permissions,omitempty" binding:"omitempty,oneof=all stt tts"`
+		Preferences string `json:"preferences,omitempty"`
 		IsActive    *bool  `json:"is_active,omitempty"`
 	}
 

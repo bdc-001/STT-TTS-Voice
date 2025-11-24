@@ -191,28 +191,7 @@ export default function PlatformHome() {
         </div>
 
         {/* Featured Modules */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Link href="/platform/sts/emotion">
-            <Card className="hover:shadow-lg transition-all cursor-pointer h-full">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <Heart className="h-8 w-8 text-pink-500" />
-                  <Badge>New</Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <h3 className="font-semibold text-lg mb-2">Emotion Transfer</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Change the emotional tone of existing voice recordings
-                </p>
-                <Button variant="outline" size="sm" className="w-full">
-                  Try Now
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
-
+        <div className="grid md:grid-cols-2 gap-6">
           <Link href="/platform/analytics">
             <Card className="hover:shadow-lg transition-all cursor-pointer h-full">
               <CardHeader>

@@ -8,13 +8,14 @@ import (
 
 // User represents a user in the system
 type User struct {
-	ID        uint           `json:"id" gorm:"primaryKey"`
-	Username  string         `json:"username" gorm:"uniqueIndex;not null"`
-	Email     string         `json:"email" gorm:"uniqueIndex;not null"`
-	Password  string         `json:"-" gorm:"not null"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	ID          uint           `json:"id" gorm:"primaryKey"`
+	Username    string         `json:"username" gorm:"uniqueIndex;not null"`
+	Email       string         `json:"email" gorm:"uniqueIndex;not null"`
+	Password    string         `json:"-" gorm:"not null"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	Preferences string         `json:"preferences" gorm:"type:text"` // JSON string for user preferences
 
 	// Relationships
 	APIKeys []APIKey `json:"api_keys,omitempty" gorm:"foreignKey:UserID"`
@@ -43,7 +44,7 @@ type Usage struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	UserID    uint           `json:"user_id" gorm:"not null"`
 	APIKeyID  uint           `json:"api_key_id" gorm:"not null"`
-	Type      string         `json:"type" gorm:"not null"` // stt, tts
+	Type      string         `json:"type" gorm:"not null"`   // stt, tts
 	Amount    int64          `json:"amount" gorm:"not null"` // minutes for STT, characters for TTS
 	Cost      float64        `json:"cost" gorm:"not null"`
 	CreatedAt time.Time      `json:"created_at"`
@@ -57,62 +58,62 @@ type Usage struct {
 
 // STTRequest represents a speech-to-text request
 type STTRequest struct {
-	AudioData     []byte            `json:"audio_data"`
-	Language      string            `json:"language"`      // en-US, es-ES, etc.
-	Format        string            `json:"format"`        // wav, mp3, flac
-	SampleRate    int               `json:"sample_rate"`
-	Channels      int               `json:"channels"`
-	EnableDiarization bool          `json:"enable_diarization"`
-	CustomWords   []string          `json:"custom_words"`
-	EnablePunctuation bool          `json:"enable_punctuation"`
-	EnableProfanityFilter bool      `json:"enable_profanity_filter"`
-	Metadata      map[string]string `json:"metadata"`
+	AudioData             []byte            `json:"audio_data"`
+	Language              string            `json:"language"` // en-US, es-ES, etc.
+	Format                string            `json:"format"`   // wav, mp3, flac
+	SampleRate            int               `json:"sample_rate"`
+	Channels              int               `json:"channels"`
+	EnableDiarization     bool              `json:"enable_diarization"`
+	CustomWords           []string          `json:"custom_words"`
+	EnablePunctuation     bool              `json:"enable_punctuation"`
+	EnableProfanityFilter bool              `json:"enable_profanity_filter"`
+	Metadata              map[string]string `json:"metadata"`
 }
 
 // STTResponse represents a speech-to-text response
 type STTResponse struct {
-	Transcript    string                 `json:"transcript"`
-	Segments      []STTSegment           `json:"segments,omitempty"`
-	Confidence    float64                `json:"confidence"`
-	Language      string                 `json:"language"`
-	Duration      float64                `json:"duration"`
-	WordCount     int                    `json:"word_count"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	Transcript string                 `json:"transcript"`
+	Segments   []STTSegment           `json:"segments,omitempty"`
+	Confidence float64                `json:"confidence"`
+	Language   string                 `json:"language"`
+	Duration   float64                `json:"duration"`
+	WordCount  int                    `json:"word_count"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // STTSegment represents a segment of transcribed audio
 type STTSegment struct {
-	Start       float64 `json:"start"`
-	End         float64 `json:"end"`
-	Text        string  `json:"text"`
-	Speaker     string  `json:"speaker,omitempty"`
-	Confidence  float64 `json:"confidence"`
+	Start      float64 `json:"start"`
+	End        float64 `json:"end"`
+	Text       string  `json:"text"`
+	Speaker    string  `json:"speaker,omitempty"`
+	Confidence float64 `json:"confidence"`
 }
 
 // TTSRequest represents a text-to-speech request
 type TTSRequest struct {
-	Text         string            `json:"text"`
-	Voice        string            `json:"voice"`        // voice ID
-	Language     string            `json:"language"`     // en-US, es-ES, etc.
-	Speed        float64           `json:"speed"`        // 0.5 - 2.0
-	Pitch        float64           `json:"pitch"`        // 0.5 - 2.0
-	Emotion      string            `json:"emotion"`      // neutral, happy, sad, angry
-	Format       string            `json:"format"`       // wav, mp3, ogg
-	SampleRate   int               `json:"sample_rate"`  // 16000, 22050, 44100
-	SSML         bool              `json:"ssml"`         // whether text is SSML
-	Metadata     map[string]string `json:"metadata"`
+	Text       string            `json:"text"`
+	Voice      string            `json:"voice"`       // voice ID
+	Language   string            `json:"language"`    // en-US, es-ES, etc.
+	Speed      float64           `json:"speed"`       // 0.5 - 2.0
+	Pitch      float64           `json:"pitch"`       // 0.5 - 2.0
+	Emotion    string            `json:"emotion"`     // neutral, happy, sad, angry
+	Format     string            `json:"format"`      // wav, mp3, ogg
+	SampleRate int               `json:"sample_rate"` // 16000, 22050, 44100
+	SSML       bool              `json:"ssml"`        // whether text is SSML
+	Metadata   map[string]string `json:"metadata"`
 }
 
 // TTSResponse represents a text-to-speech response
 type TTSResponse struct {
-	AudioData    []byte                 `json:"audio_data"`
-	AudioURL     string                 `json:"audio_url,omitempty"`
-	Duration     float64                `json:"duration"`
-	Format       string                 `json:"format"`
-	SampleRate   int                    `json:"sample_rate"`
-	Channels     int                    `json:"channels"`
-	BitRate      int                    `json:"bit_rate"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	AudioData  []byte                 `json:"audio_data"`
+	AudioURL   string                 `json:"audio_url,omitempty"`
+	Duration   float64                `json:"duration"`
+	Format     string                 `json:"format"`
+	SampleRate int                    `json:"sample_rate"`
+	Channels   int                    `json:"channels"`
+	BitRate    int                    `json:"bit_rate"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // Voice represents an available TTS voice
@@ -139,4 +140,43 @@ type SuccessResponse struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data"`
 	Message string      `json:"message,omitempty"`
+}
+
+// Job represents an asynchronous background job
+type Job struct {
+	ID         string         `json:"id" gorm:"primaryKey"`
+	UserID     uint           `json:"user_id" gorm:"not null"`
+	Type       string         `json:"type" gorm:"not null"`   // voice_clone, voice_design, etc.
+	Status     string         `json:"status" gorm:"not null"` // pending, processing, completed, failed
+	Progress   int            `json:"progress" gorm:"default:0"`
+	Result     interface{}    `json:"result,omitempty" gorm:"-"` // Transient result field
+	ResultJSON []byte         `json:"-" gorm:"column:result"`    // Stored result
+	Error      string         `json:"error,omitempty"`
+	CreatedAt  time.Time      `json:"created_at"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Relationships
+	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
+}
+
+// CustomVoice represents a user-created voice
+type CustomVoice struct {
+	ID          string         `json:"id" gorm:"primaryKey"`
+	UserID      uint           `json:"user_id" gorm:"not null"`
+	Name        string         `json:"name" gorm:"not null"`
+	Description string         `json:"description"`
+	Category    string         `json:"category"` // support, marketing, etc.
+	Gender      string         `json:"gender"`
+	Language    string         `json:"language"`
+	Accent      string         `json:"accent"`
+	PreviewURL  string         `json:"preview_url"`
+	ModelPath   string         `json:"-"` // Path to model file or external ID
+	IsActive    bool           `json:"is_active" gorm:"default:true"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+
+	// Relationships
+	User User `json:"user,omitempty" gorm:"foreignKey:UserID"`
 }

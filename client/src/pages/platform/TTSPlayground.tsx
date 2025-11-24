@@ -19,7 +19,9 @@ import {
   Sparkles,
   BarChart3
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { tts } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TTSPlayground() {
   const [text, setText] = useState("Welcome to the Convin Voice Intelligence Platform. Experience the power of natural speech synthesis with advanced emotion control and neural voice technology.");
@@ -29,6 +31,18 @@ export default function TTSPlayground() {
   const [emotion, setEmotion] = useState("neutral");
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    return () => {
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl);
+      }
+    };
+  }, [audioUrl]);
 
   const voices = [
     { id: "sarah-professional", name: "Sarah - Professional", category: "Customer Support" },
@@ -40,20 +54,73 @@ export default function TTSPlayground() {
 
   const emotions = ["Neutral", "Empathetic", "Assertive", "Friendly", "Energetic"];
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
+    if (!text.trim()) return;
+
+    setIsLoading(true);
     setIsGenerated(false);
-    setTimeout(() => {
-      setIsGenerated(true);
-    }, 1500);
+
+    try {
+      const response = await tts.generate({
+        text,
+        voice: selectedVoice,
+        speed: speed[0],
+        pitch: pitch[0],
+        emotion: emotion,
+        language: "en-US", // Default for now
+        format: "mp3"
+      });
+
+      if (response.data.success) {
+        const { audio_data } = response.data.data;
+
+        // Convert base64 to blob
+        const byteCharacters = atob(audio_data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "audio/mp3" });
+        const url = URL.createObjectURL(blob);
+
+        setAudioUrl(url);
+        setIsGenerated(true);
+
+        if (audioRef.current) {
+          audioRef.current.src = url;
+        }
+
+        toast({
+          title: "Success",
+          description: "Speech generated successfully",
+        });
+      }
+    } catch (error: any) {
+      console.error("TTS error:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to generate speech",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePlayPause = () => {
-    if (!isGenerated) return;
-    
-    setIsPlaying(!isPlaying);
-    if (!isPlaying) {
-      setTimeout(() => setIsPlaying(false), 4000);
+    if (!audioRef.current || !isGenerated) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
     }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
   };
 
   return (
@@ -197,14 +264,21 @@ export default function TTSPlayground() {
                   <span>Est. duration: {Math.ceil(text.length / 15)}s</span>
                 </div>
 
-                <Button 
-                  onClick={handleGenerate} 
+                <Button
+                  onClick={handleGenerate}
                   className="w-full bg-gradient-to-r from-primary to-chart-2"
-                  disabled={!text.trim()}
+                  disabled={!text.trim() || isLoading}
                 >
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Generate Speech
+                  {isLoading ? (
+                    "Generating..."
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Speech
+                    </>
+                  )}
                 </Button>
+                <audio ref={audioRef} onEnded={handleAudioEnded} className="hidden" />
               </CardContent>
             </Card>
 
@@ -231,11 +305,10 @@ export default function TTSPlayground() {
                         {[...Array(40)].map((_, i) => (
                           <div
                             key={i}
-                            className={`flex-1 rounded-t transition-all ${
-                              isPlaying 
-                                ? "bg-gradient-to-t from-primary to-chart-2 animate-pulse" 
-                                : "bg-gradient-to-t from-primary/30 to-chart-2/30"
-                            }`}
+                            className={`flex-1 rounded-t transition-all ${isPlaying
+                              ? "bg-gradient-to-t from-primary to-chart-2 animate-pulse"
+                              : "bg-gradient-to-t from-primary/30 to-chart-2/30"
+                              }`}
                             style={{
                               height: `${Math.random() * 100}%`,
                               animationDelay: `${i * 30}ms`
@@ -267,7 +340,7 @@ export default function TTSPlayground() {
 
                       <div className="flex-1">
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-gradient-to-r from-primary to-chart-2 transition-all"
                             style={{ width: isPlaying ? "100%" : "0%" }}
                           />

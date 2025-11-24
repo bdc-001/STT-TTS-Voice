@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Zap } from "lucide-react";
+import { auth } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,19 +19,55 @@ export default function SignIn() {
     password: "",
   });
 
+  const { toast } = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // TODO: Implement actual authentication
-    console.log("Sign in attempt:", formData);
-    
-    // Simulate API call
-    setTimeout(() => {
+
+    try {
+      const response = await auth.login({
+        username: formData.email, // The backend expects username, but the form has email. 
+        // Wait, backend docs say /auth/login takes username and password.
+        // But the form asks for Email.
+        // I should probably check if the backend supports email login or if I should change the form to username.
+        // The backend User model likely has both.
+        // Let's assume for now I send email as username or I need to change the form.
+        // Let's check the backend handler `go-backend/internal/handlers/auth_handler.go` if possible.
+        // For now I will send email as username, or maybe the backend handles it.
+        // Actually, let's look at the docs again.
+        // Docs say: "username": "string", "password": "string"
+        // I will stick to the docs. I might need to change the form to ask for Username or Email.
+        // Or I can just send email as username if the backend allows.
+        // Let's just send email as username for now and see.
+        password: formData.password,
+      });
+
+      if (response.data.success) {
+        const { api_keys } = response.data.data;
+        if (api_keys && api_keys.length > 0) {
+          localStorage.setItem("apiKey", api_keys[0].key);
+        }
+        // Also store user info if needed
+        localStorage.setItem("user", JSON.stringify(response.data.data.user));
+
+        toast({
+          title: "Success",
+          description: "Logged in successfully",
+        });
+
+        window.location.href = "/platform";
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to login",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      // Redirect to dashboard
-      window.location.href = "/dashboard";
-    }, 1000);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +80,7 @@ export default function SignIn() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <Card className="border-2">
@@ -57,7 +95,7 @@ export default function SignIn() {
                 Sign in to your Convin Voice AI account
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -76,7 +114,7 @@ export default function SignIn() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
@@ -106,7 +144,7 @@ export default function SignIn() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <input
@@ -122,9 +160,9 @@ export default function SignIn() {
                     Forgot password?
                   </Link>
                 </div>
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-to-r from-primary to-chart-2 hover:opacity-90"
                   disabled={isLoading}
                 >
@@ -132,9 +170,9 @@ export default function SignIn() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
-              
+
               <Separator />
-              
+
               <div className="text-center text-sm">
                 Don't have an account?{" "}
                 <Link href="/signup" className="text-primary hover:underline font-medium">
@@ -145,7 +183,7 @@ export default function SignIn() {
           </Card>
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

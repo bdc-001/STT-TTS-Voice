@@ -61,10 +61,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Success: true,
 		Data: gin.H{
 			"user": gin.H{
-				"id":         user.ID,
-				"username":   user.Username,
-				"email":      user.Email,
-				"created_at": user.CreatedAt,
+				"id":          user.ID,
+				"username":    user.Username,
+				"email":       user.Email,
+				"preferences": user.Preferences,
+				"created_at":  user.CreatedAt,
 			},
 			"api_key": apiKey.Key,
 		},
@@ -88,14 +89,19 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
+	// Try to get user by username first, then by email
 	user, err := h.userService.GetUserByUsername(req.Username)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, models.ErrorResponse{
-			Error:   "Authentication failed",
-			Message: "Invalid username or password",
-			Code:    http.StatusUnauthorized,
-		})
-		return
+		// If not found by username, try email
+		user, err = h.userService.GetUserByEmail(req.Username)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, models.ErrorResponse{
+				Error:   "Authentication failed",
+				Message: "Invalid username or password",
+				Code:    http.StatusUnauthorized,
+			})
+			return
+		}
 	}
 
 	if !h.userService.ValidatePassword(user, req.Password) {
@@ -117,10 +123,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		Success: true,
 		Data: gin.H{
 			"user": gin.H{
-				"id":         user.ID,
-				"username":   user.Username,
-				"email":      user.Email,
-				"created_at": user.CreatedAt,
+				"id":          user.ID,
+				"username":    user.Username,
+				"email":       user.Email,
+				"preferences": user.Preferences,
+				"created_at":  user.CreatedAt,
 			},
 			"api_keys": apiKeys,
 		},
@@ -175,8 +182,9 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	var req struct {
-		Email    string `json:"email,omitempty"`
-		Password string `json:"password,omitempty"`
+		Email       string `json:"email,omitempty"`
+		Password    string `json:"password,omitempty"`
+		Preferences string `json:"preferences,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -214,6 +222,9 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 			return
 		}
 		user.Password = string(hashedPassword)
+	}
+	if req.Preferences != "" {
+		user.Preferences = req.Preferences
 	}
 
 	if err := h.userService.UpdateUser(user); err != nil {

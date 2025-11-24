@@ -1,19 +1,22 @@
 package handlers
 
 import (
+	"convin-voice-api/internal/database"
 	"convin-voice-api/internal/models"
 	"convin-voice-api/internal/services"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
 type TTSHandler struct {
-	ttsService     *services.TTSService
-	apiKeyService  *services.APIKeyService
-	logger         *logrus.Logger
+	ttsService    *services.TTSService
+	apiKeyService *services.APIKeyService
+	logger        *logrus.Logger
 }
 
 func NewTTSHandler(ttsService *services.TTSService, apiKeyService *services.APIKeyService, logger *logrus.Logger) *TTSHandler {
@@ -146,12 +149,200 @@ func (h *TTSHandler) GenerateSpeech(c *gin.Context) {
 	c.Data(http.StatusOK, "audio/"+req.Format, response.AudioData)
 }
 
-// GetVoices returns available voices
+// GetVoices returns available voices (system + user custom voices)
 func (h *TTSHandler) GetVoices(c *gin.Context) {
-	voices := h.ttsService.GetAvailableVoices()
+	// Get system voices
+	voices := h.ttsService.GetAvailableVoices() // Changed from GetVoices() to GetAvailableVoices() to match existing service method
+
+	// If user is authenticated, get their custom voices
+	userID, exists := c.Get("userID")
+	if exists {
+		var customVoices []models.CustomVoice
+		if err := database.DB.Where("user_id = ? AND is_active = ?", userID, true).Find(&customVoices).Error; err == nil {
+			for _, cv := range customVoices {
+				voices = append(voices, models.Voice{
+					ID:          cv.ID,
+					Name:        cv.Name,
+					Gender:      cv.Gender,
+					Language:    cv.Language,
+					Accent:      cv.Accent,
+					Description: cv.Description,
+					SampleURL:   cv.PreviewURL,
+					IsActive:    cv.IsActive,
+				})
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, models.SuccessResponse{
 		Success: true,
 		Data:    voices,
+	})
+}
+
+// CloneVoice initiates a voice cloning job
+func (h *TTSHandler) CloneVoice(c *gin.Context) {
+	userID := c.GetUint("userID")
+
+	// Parse multipart form
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "Invalid form data",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	files := form.File["file"]
+	if len(files) == 0 {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "Audio file is required",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	name := c.PostForm("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "Bad Request",
+			Message: "Voice name is required",
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	// Create a new Job
+	jobID := uuid.New().String()
+	job := models.Job{
+		ID:       jobID,
+		UserID:   userID,
+		Type:     "voice_clone",
+		Status:   "pending",
+		Progress: 0,
+	}
+
+	if err := database.DB.Create(&job).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to create job",
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	// Simulate async processing (in a real app, this would go to a queue)
+	go func() {
+		// Simulate processing time
+		time.Sleep(2 * time.Second)
+
+		// Update job status
+		database.DB.Model(&job).Updates(map[string]interface{}{
+			"status":   "processing",
+			"progress": 50,
+		})
+
+		time.Sleep(2 * time.Second)
+
+		// Create the custom voice
+		voiceID := "custom-" + uuid.New().String()[:8]
+		customVoice := models.CustomVoice{
+			ID:          voiceID,
+			UserID:      userID,
+			Name:        name,
+			Description: "Cloned voice from " + files[0].Filename,
+			Category:    "cloned",
+			Gender:      "unknown", // Would be detected
+			Language:    "en-US",   // Default
+			IsActive:    true,
+		}
+
+		database.DB.Create(&customVoice)
+
+		// Complete job
+		database.DB.Model(&job).Updates(map[string]interface{}{
+			"status":   "completed",
+			"progress": 100,
+			"result":   []byte(`{"voice_id": "` + voiceID + `"}`),
+		})
+	}()
+
+	c.JSON(http.StatusAccepted, models.SuccessResponse{
+		Success: true,
+		Data:    gin.H{"job_id": jobID},
+		Message: "Voice cloning job started",
+	})
+}
+
+// DesignVoice initiates a voice design job
+func (h *TTSHandler) DesignVoice(c *gin.Context) {
+	var req struct {
+		Prompt   string `json:"prompt"`
+		Name     string `json:"name"`
+		Category string `json:"category"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, models.ErrorResponse{
+			Error:   "Bad Request",
+			Message: err.Error(),
+			Code:    http.StatusBadRequest,
+		})
+		return
+	}
+
+	userID := c.GetUint("userID")
+	jobID := uuid.New().String()
+
+	job := models.Job{
+		ID:       jobID,
+		UserID:   userID,
+		Type:     "voice_design",
+		Status:   "pending",
+		Progress: 0,
+	}
+
+	if err := database.DB.Create(&job).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, models.ErrorResponse{
+			Error:   "Internal Server Error",
+			Message: "Failed to create job",
+			Code:    http.StatusInternalServerError,
+		})
+		return
+	}
+
+	// Simulate async processing
+	go func() {
+		time.Sleep(3 * time.Second)
+
+		voiceID := "designed-" + uuid.New().String()[:8]
+		customVoice := models.CustomVoice{
+			ID:          voiceID,
+			UserID:      userID,
+			Name:        req.Name,
+			Description: req.Prompt,
+			Category:    req.Category,
+			Gender:      "female", // Simulated
+			Language:    "en-US",
+			IsActive:    true,
+		}
+
+		database.DB.Create(&customVoice)
+
+		database.DB.Model(&job).Updates(map[string]interface{}{
+			"status":   "completed",
+			"progress": 100,
+			"result":   []byte(`{"voice_id": "` + voiceID + `"}`),
+		})
+	}()
+
+	c.JSON(http.StatusAccepted, models.SuccessResponse{
+		Success: true,
+		Data:    gin.H{"job_id": jobID},
+		Message: "Voice design job started",
 	})
 }
 

@@ -23,7 +23,9 @@ import {
   Frown,
   Meh
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { stt } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function STTPlayground() {
   const [transcript, setTranscript] = useState("");
@@ -31,19 +33,63 @@ export default function STTPlayground() {
   const [speakerCount, setSpeakerCount] = useState("auto");
   const [outputType, setOutputType] = useState("text");
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
-  const handleUpload = () => {
-    // Simulate processing
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Error",
+        description: "Please select an audio file first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
     setProcessingComplete(false);
-    setTimeout(() => {
-      setTranscript(
-        "Speaker 1 [00:00-00:15]: Hello, thank you for calling Convin support. How can I help you today?\n\n" +
-        "Speaker 2 [00:15-00:35]: Hi, I'm having issues with my voice transcription service. The accuracy seems lower than expected.\n\n" +
-        "Speaker 1 [00:35-00:55]: I understand your concern. Let me check your account settings. Can you tell me what language you're primarily using?\n\n" +
-        "Speaker 2 [00:55-01:10]: We're using English US, but we have some callers with regional accents."
-      );
-      setProcessingComplete(true);
-    }, 2000);
+
+    try {
+      const formData = new FormData();
+      formData.append("audio", selectedFile);
+      formData.append("language", selectedLanguage);
+      // formData.append("speaker_count", speakerCount); // Backend might not support this yet, but let's keep it if needed or check docs.
+      // Docs say: enable_diarization (boolean).
+      if (speakerCount !== "auto") {
+        // Maybe map speaker count to something or just enable diarization
+        formData.append("enable_diarization", "true");
+      } else {
+        formData.append("enable_diarization", "true"); // Default to true for auto?
+      }
+
+      const response = await stt.transcribe(formData);
+
+      if (response.data.success) {
+        setTranscript(response.data.data.transcript);
+        setProcessingComplete(true);
+        toast({
+          title: "Success",
+          description: "Transcription completed successfully",
+        });
+      }
+    } catch (error: any) {
+      console.error("Transcription error:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to transcribe audio",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const emotionTimeline = [
@@ -83,19 +129,35 @@ export default function STTPlayground() {
                 <CardTitle className="text-base">Upload Audio</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
+                <div
+                  className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="audio/*"
+                    onChange={handleFileSelect}
+                  />
                   <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm font-medium mb-1">
-                    Click to upload or drag and drop
+                    {selectedFile ? selectedFile.name : "Click to upload or drag and drop"}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     WAV, MP3, M4A (max. 100MB)
                   </p>
                 </div>
 
-                <Button onClick={handleUpload} className="w-full bg-gradient-to-r from-primary to-chart-2">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Process Audio
+                <Button onClick={handleUpload} className="w-full bg-gradient-to-r from-primary to-chart-2" disabled={isLoading}>
+                  {isLoading ? (
+                    "Processing..."
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Process Audio
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

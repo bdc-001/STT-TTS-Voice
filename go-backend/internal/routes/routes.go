@@ -3,6 +3,7 @@ package routes
 import (
 	"convin-voice-api/internal/handlers"
 	"convin-voice-api/internal/middleware"
+	"convin-voice-api/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,6 +14,9 @@ func SetupRoutes(
 	sttHandler *handlers.STTHandler,
 	ttsHandler *handlers.TTSHandler,
 	userHandler *handlers.UserHandler,
+	jobHandler *handlers.JobHandler,
+	apiKeyService *services.APIKeyService,
+	jwtSecret string,
 ) {
 	// Health check
 	router.GET("/health", func(c *gin.Context) {
@@ -45,7 +49,7 @@ func SetupRoutes(
 
 		// Protected routes (require JWT authentication)
 		protected := v1.Group("/")
-		protected.Use(middleware.JWTAuth("your-jwt-secret"))
+		protected.Use(middleware.JWTAuth(jwtSecret))
 		{
 			// User profile
 			protected.GET("/profile", authHandler.GetProfile)
@@ -63,7 +67,7 @@ func SetupRoutes(
 
 		// API key protected routes
 		apiKeyProtected := v1.Group("/")
-		apiKeyProtected.Use(middleware.APIKeyAuth(nil))
+		apiKeyProtected.Use(middleware.APIKeyAuth(apiKeyService))
 		{
 			// STT endpoints
 			apiKeyProtected.POST("/stt/transcribe", middleware.MaxSizeLimit(50*1024*1024), sttHandler.Transcribe) // 50MB limit
@@ -72,6 +76,12 @@ func SetupRoutes(
 			// TTS endpoints
 			apiKeyProtected.POST("/tts/generate", middleware.MaxSizeLimit(10*1024*1024), ttsHandler.GenerateSpeech)          // 10MB limit
 			apiKeyProtected.POST("/tts/generate-json", middleware.MaxSizeLimit(10*1024*1024), ttsHandler.GenerateSpeechJSON) // 10MB limit
+			apiKeyProtected.POST("/tts/clone", middleware.MaxSizeLimit(20*1024*1024), ttsHandler.CloneVoice)                 // 20MB limit
+			apiKeyProtected.POST("/tts/design", ttsHandler.DesignVoice)
+
+			// Job endpoints
+			apiKeyProtected.GET("/jobs", jobHandler.ListJobs)
+			apiKeyProtected.GET("/jobs/:id", jobHandler.GetJob)
 		}
 	}
 

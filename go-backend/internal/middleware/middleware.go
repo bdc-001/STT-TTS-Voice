@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"convin-voice-api/internal/services"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
@@ -89,7 +91,7 @@ func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
 }
 
 // API Key authentication middleware
-func APIKeyAuth(apiKeyService interface{}) gin.HandlerFunc {
+func APIKeyAuth(apiKeyService *services.APIKeyService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Get API key from header
 		apiKey := c.GetHeader("X-API-Key")
@@ -109,10 +111,34 @@ func APIKeyAuth(apiKeyService interface{}) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Validate API key with service
-		// For now, just set a placeholder user ID
-		c.Set("user_id", uint(1))
-		c.Set("api_key", apiKey)
+		if apiKeyService == nil {
+			// Fallback for testing/dev if service not provided
+			c.Set("user_id", uint(1))
+			c.Set("api_key", apiKey)
+			c.Next()
+			return
+		}
+
+		// Validate API key with service
+		key, err := apiKeyService.ValidateAPIKey(apiKey)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "Invalid API key",
+			})
+			c.Abort()
+			return
+		}
+
+		if !key.IsActive {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"error": "API key is inactive",
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", key.UserID)
+		c.Set("api_key", key.Key)
 		c.Next()
 	}
 }

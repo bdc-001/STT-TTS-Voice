@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
+import {
   Home,
   Mic,
   Volume2,
@@ -72,17 +72,7 @@ const navigationItems: NavigationItem[] = [
     path: "/platform/stt",
     children: [
       { label: "Playground", icon: Sparkles, path: "/platform/stt/playground" },
-      { label: "Transcripts", icon: FileAudio, path: "/platform/stt/transcripts" },
-      { label: "Reports", icon: BarChart3, path: "/platform/stt/reports" }
-    ]
-  },
-  {
-    label: "Speech-to-Speech",
-    icon: Activity,
-    path: "/platform/sts",
-    children: [
-      { label: "Emotion Transfer", icon: Heart, path: "/platform/sts/emotion" },
-      { label: "Accent Normalization", icon: Mic, path: "/platform/sts/accent" }
+      { label: "Transcripts", icon: FileAudio, path: "/platform/stt/transcripts" }
     ]
   },
   {
@@ -96,13 +86,13 @@ const navigationItems: NavigationItem[] = [
     path: "/platform/compliance"
   },
   {
-    label: "Platform",
+    label: "Settings",
     icon: Settings,
     path: "/platform/settings",
     children: [
-      { label: "API Keys", icon: Key, path: "/platform/settings/api-keys" },
-      { label: "Usage", icon: Activity, path: "/platform/settings/usage" },
-      { label: "Billing", icon: CreditCard, path: "/platform/settings/billing" }
+      { label: "API Keys", icon: Key, path: "/platform/settings" },
+      { label: "Usage", icon: Activity, path: "/platform/settings" },
+      { label: "Billing", icon: CreditCard, path: "/platform/settings" }
     ]
   },
   {
@@ -110,8 +100,8 @@ const navigationItems: NavigationItem[] = [
     icon: BookOpen,
     path: "/platform/resources",
     children: [
-      { label: "Documentation", icon: BookOpen, path: "/platform/resources/docs" },
-      { label: "Ethical Guidelines", icon: Shield, path: "/platform/resources/ethics" }
+      { label: "Documentation", icon: BookOpen, path: "/platform/resources" },
+      { label: "Ethical Guidelines", icon: Shield, path: "/platform/resources" }
     ]
   }
 ];
@@ -124,6 +114,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  useState(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        setUser(JSON.parse(userStr));
+      } catch (e) {
+        console.error("Failed to parse user info", e);
+      }
+    }
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("apiKey");
+    localStorage.removeItem("user");
+    window.location.href = "/signin";
+  };
 
   const toggleExpanded = (label: string) => {
     setExpandedItems(prev =>
@@ -165,18 +174,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <>
                     <button
                       onClick={() => toggleExpanded(item.label)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${
-                        isActive(item.path) ? "bg-hover" : ""
-                      }`}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${isActive(item.path) ? "bg-hover" : ""
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
                       </div>
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          expandedItems.includes(item.label) ? "rotate-180" : ""
-                        }`}
+                        className={`h-4 w-4 transition-transform ${expandedItems.includes(item.label) ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
                     {expandedItems.includes(item.label) && (
@@ -185,9 +192,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           <li key={child.path}>
                             <Link href={child.path}>
                               <a
-                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${
-                                  isActive(child.path) ? "bg-hover font-medium" : ""
-                                }`}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${isActive(child.path) ? "bg-hover font-medium" : ""
+                                  }`}
                               >
                                 <child.icon className="h-4 w-4" />
                                 <span>{child.label}</span>
@@ -201,9 +207,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 ) : (
                   <Link href={item.path}>
                     <a
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${
-                        isActive(item.path) ? "bg-hover font-medium" : ""
-                      }`}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-hover transition-colors ${isActive(item.path) ? "bg-hover font-medium" : ""
+                        }`}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.label}</span>
@@ -264,8 +269,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div>
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-xs text-muted-foreground">john@convin.ai</p>
+                      <p className="font-medium">{user?.username || "User"}</p>
+                      <p className="text-xs text-muted-foreground">{user?.email || "user@example.com"}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -278,7 +283,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     Settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>

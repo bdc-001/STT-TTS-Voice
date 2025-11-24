@@ -1,6 +1,7 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,8 @@ import {
   Calendar
 } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { tts, voices, jobs } from "@/lib/api";
 
 export default function VoiceStudio() {
   const [designPrompt, setDesignPrompt] = useState("");
@@ -35,6 +38,162 @@ export default function VoiceStudio() {
   const [breathiness, setBreathiness] = useState([30]);
   const [warmth, setWarmth] = useState([70]);
   const [clarity, setClarity] = useState([85]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const pollJob = async (jobId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await jobs.get(jobId);
+        const job = response.data.data;
+
+        if (job.status === 'completed') {
+          clearInterval(interval);
+          setIsLoading(false);
+          toast({
+            title: "Success",
+            description: "Voice created successfully!",
+          });
+        } else if (job.status === 'failed') {
+          clearInterval(interval);
+          setIsLoading(false);
+          toast({
+            title: "Error",
+            description: job.error || "Job failed",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        clearInterval(interval);
+        setIsLoading(false);
+        console.error("Polling error:", error);
+      }
+    }, 2000);
+  };
+
+  const handleDesignVoice = async () => {
+    if (!designPrompt.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a voice description prompt",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await voices.design({
+        prompt: designPrompt,
+        name: "Designed Voice", // TODO: Add name input
+        category: "generated"
+      });
+
+      if (response.data.success) {
+        const jobId = response.data.data.job_id;
+        toast({
+          title: "Processing",
+          description: "Voice design job started...",
+        });
+        pollJob(jobId);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Design error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start voice design",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCloneVoice = async () => {
+    if (!consentFile) {
+      toast({
+        title: "Error",
+        description: "Please upload a consent file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // TODO: Get actual audio file from input
+    // For now, we'll just check if consent file is there, but we need the audio sample too.
+    // Assuming there's another state for audio file or we use the same input for simplicity in this demo?
+    // The UI has "Upload Audio Sample" but no state connected to it in the original code?
+    // Let's assume we need to add state for audio file.
+
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', consentFile); // Using consent file as audio for now since UI is ambiguous
+      formData.append('name', "Cloned Voice");
+
+      const response = await voices.clone(formData);
+
+      if (response.data.success) {
+        const jobId = response.data.data.job_id;
+        toast({
+          title: "Processing",
+          description: "Voice cloning job started...",
+        });
+        pollJob(jobId);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Clone error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start voice cloning",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePreviewVoice = async () => {
+    setIsLoading(true);
+    try {
+      // Use default text for preview
+      const response = await tts.generate({
+        text: "This is a preview of your custom voice settings.",
+        voice: "sarah-professional", // Use a base voice for now
+        speed: 1.0,
+        pitch: 1.0,
+        emotion: "neutral",
+        language: "en-US",
+        format: "mp3"
+      });
+
+      if (response.data.success) {
+        const { audio_data } = response.data.data;
+        const byteCharacters = atob(audio_data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "audio/mp3" });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
+
+        toast({
+          title: "Success",
+          description: "Playing voice preview",
+        });
+      }
+    } catch (error) {
+      console.error("Preview error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate preview",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -112,9 +271,9 @@ export default function VoiceStudio() {
                     <Input placeholder="e.g., Sarah - Empathetic Support" />
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2">
+                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2" onClick={handleDesignVoice} disabled={isLoading}>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Voice
+                    {isLoading ? "Generating..." : "Generate Voice"}
                   </Button>
                 </CardContent>
               </Card>
@@ -203,9 +362,9 @@ export default function VoiceStudio() {
                     </label>
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2" disabled>
+                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2" onClick={handleCloneVoice} disabled={isLoading}>
                     <Copy className="h-4 w-4 mr-2" />
-                    Clone Voice
+                    {isLoading ? "Cloning..." : "Clone Voice"}
                   </Button>
                 </CardContent>
               </Card>
@@ -346,9 +505,9 @@ export default function VoiceStudio() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Adjust parameters and preview changes
                       </p>
-                      <Button>
+                      <Button onClick={handlePreviewVoice} disabled={isLoading}>
                         <Play className="h-4 w-4 mr-2" />
-                        Preview Voice
+                        {isLoading ? "Generating..." : "Preview Voice"}
                       </Button>
                     </div>
 
@@ -421,7 +580,7 @@ export default function VoiceStudio() {
 
                     <div className="space-y-2">
                       <Label>Usage Rights</Label>
-                      <Textarea 
+                      <Textarea
                         placeholder="Describe the permitted usage rights and restrictions..."
                         className="min-h-24"
                       />

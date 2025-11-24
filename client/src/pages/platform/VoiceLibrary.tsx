@@ -17,7 +17,9 @@ import {
   Download,
   Star
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { tts } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Voice {
   id: string;
@@ -30,76 +32,52 @@ interface Voice {
   isCustom?: boolean;
 }
 
-const voices: Voice[] = [
-  {
-    id: "1",
-    name: "Sarah - Professional",
-    description: "Clear, professional voice ideal for customer support and business communications",
-    category: "Customer Support",
-    emotion: "Neutral, Professional",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=225&fit=crop",
-    isFavorite: true
-  },
-  {
-    id: "2",
-    name: "Alex - Empathetic",
-    description: "Warm and understanding tone perfect for sensitive customer interactions",
-    category: "Customer Support",
-    emotion: "Empathetic, Caring",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=225&fit=crop"
-  },
-  {
-    id: "3",
-    name: "Marcus - Energetic",
-    description: "Dynamic and enthusiastic voice for marketing and promotional content",
-    category: "Marketing",
-    emotion: "Energetic, Confident",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=225&fit=crop"
-  },
-  {
-    id: "4",
-    name: "Emma - Friendly",
-    description: "Approachable and friendly tone for general interactions",
-    category: "Customer Support",
-    emotion: "Friendly, Warm",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=225&fit=crop"
-  },
-  {
-    id: "5",
-    name: "David - Assertive",
-    description: "Confident and direct voice for sales and business development",
-    category: "Marketing",
-    emotion: "Assertive, Direct",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=225&fit=crop"
-  },
-  {
-    id: "6",
-    name: "Priya - Regional (Hindi)",
-    description: "Native Hindi speaker with professional clarity",
-    category: "Regional",
-    emotion: "Professional, Clear",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=225&fit=crop"
-  }
-];
-
-const categories = [
-  { name: "All Voices", icon: Library, count: voices.length },
-  { name: "Customer Support", icon: Heart, count: voices.filter(v => v.category === "Customer Support").length },
-  { name: "Marketing", icon: TrendingUp, count: voices.filter(v => v.category === "Marketing").length },
-  { name: "Regional", icon: Globe, count: voices.filter(v => v.category === "Regional").length },
-  { name: "Empathy Voices", icon: Heart, count: voices.filter(v => v.emotion.includes("Empathetic")).length }
-];
-
 export default function VoiceLibrary() {
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("All Voices");
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const filteredVoices = selectedCategory === "All Voices" 
-    ? voices 
-    : voices.filter(v => 
-        v.category === selectedCategory || 
-        (selectedCategory === "Empathy Voices" && v.emotion.includes("Empathetic"))
-      );
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const response = await tts.getVoices();
+        if (response.data.success) {
+          const apiVoices = response.data.data.map((v: any) => ({
+            id: v.id,
+            name: v.name,
+            description: v.description,
+            category: v.gender === "Female" ? "Customer Support" : "Marketing", // Simple mapping
+            emotion: "Professional", // Default
+            image: v.gender === "Female"
+              ? "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=225&fit=crop"
+              : "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=225&fit=crop",
+            isFavorite: false
+          }));
+          setVoices(apiVoices);
+        }
+      } catch (error) {
+        console.error("Failed to fetch voices:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load voices",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVoices();
+  }, []);
+
+  const filteredVoices = selectedCategory === "All Voices"
+    ? voices
+    : voices.filter(v =>
+      v.category === selectedCategory ||
+      (selectedCategory === "Empathy Voices" && v.emotion.includes("Empathetic"))
+    );
 
   const togglePlay = (voiceId: string) => {
     if (playingVoice === voiceId) {
@@ -187,13 +165,31 @@ export default function VoiceLibrary() {
         {/* Category Tabs */}
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
           <TabsList className="grid grid-cols-5 w-full max-w-3xl">
-            {categories.map((category) => (
-              <TabsTrigger key={category.name} value={category.name} className="flex items-center gap-2">
-                <category.icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{category.name}</span>
-                <Badge variant="secondary" className="ml-1">{category.count}</Badge>
-              </TabsTrigger>
-            ))}
+            <TabsTrigger value="All Voices" className="flex items-center gap-2">
+              <Library className="h-4 w-4" />
+              <span className="hidden sm:inline">All Voices</span>
+              <Badge variant="secondary" className="ml-1">{voices.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="Customer Support" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Customer Support</span>
+              <Badge variant="secondary" className="ml-1">{voices.filter(v => v.category === "Customer Support").length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="Marketing" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Marketing</span>
+              <Badge variant="secondary" className="ml-1">{voices.filter(v => v.category === "Marketing").length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="Regional" className="flex items-center gap-2">
+              <Globe className="h-4 w-4" />
+              <span className="hidden sm:inline">Regional</span>
+              <Badge variant="secondary" className="ml-1">{voices.filter(v => v.category === "Regional").length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="Empathy Voices" className="flex items-center gap-2">
+              <Heart className="h-4 w-4" />
+              <span className="hidden sm:inline">Empathy Voices</span>
+              <Badge variant="secondary" className="ml-1">{voices.filter(v => v.emotion.includes("Empathetic")).length}</Badge>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -203,13 +199,13 @@ export default function VoiceLibrary() {
             <Card key={voice.id} className="overflow-hidden hover:shadow-xl transition-all group">
               {/* Voice Image */}
               <div className="relative aspect-video overflow-hidden">
-                <img 
-                  src={voice.image} 
+                <img
+                  src={voice.image}
                   alt={voice.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                
+
                 {/* Play Button Overlay */}
                 <button
                   onClick={() => togglePlay(voice.id)}
@@ -248,7 +244,7 @@ export default function VoiceLibrary() {
                 <p className="text-sm text-muted-foreground mb-3">
                   {voice.description}
                 </p>
-                
+
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <Badge variant="outline" className="mr-2">

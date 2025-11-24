@@ -43,6 +43,7 @@ func main() {
 	sttHandler := handlers.NewSTTHandler(sttService, apiKeyService, logger)
 	ttsHandler := handlers.NewTTSHandler(ttsService, apiKeyService, logger)
 	userHandler := handlers.NewUserHandler(userService, apiKeyService, logger)
+	jobHandler := handlers.NewJobHandler()
 
 	// Setup Gin router
 	if cfg.Environment == "production" {
@@ -55,7 +56,7 @@ func main() {
 	router.Use(middleware.CORS())
 
 	// Setup routes
-	routes.SetupRoutes(router, authHandler, sttHandler, ttsHandler, userHandler)
+	routes.SetupRoutes(router, authHandler, sttHandler, ttsHandler, userHandler, jobHandler, apiKeyService, cfg.JWTSecret)
 
 	// Start server
 	logger.Infof("Starting server on port %s", cfg.Port)

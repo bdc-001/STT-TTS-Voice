@@ -20,9 +20,13 @@ import PlatformHome from "@/pages/platform/PlatformHome";
 import VoiceLibrary from "@/pages/platform/VoiceLibrary";
 import VoiceStudio from "@/pages/platform/VoiceStudio";
 import STTPlayground from "@/pages/platform/STTPlayground";
+import STTTranscripts from "@/pages/platform/STTTranscripts";
 import TTSPlayground from "@/pages/platform/TTSPlayground";
 import Analytics from "@/pages/platform/Analytics";
 import ComplianceManager from "@/pages/platform/ComplianceManager";
+import TTSProjects from "@/pages/platform/TTSProjects";
+import Settings from "@/pages/platform/Settings";
+import Resources from "@/pages/platform/Resources";
 
 function Router() {
   return (
@@ -37,19 +41,29 @@ function Router() {
       <Route path="/signup" component={SignUp} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/dashboard" component={Dashboard} />
-      
+
       {/* Platform Routes */}
       <Route path="/platform" component={PlatformHome} />
       <Route path="/platform/voices/library" component={VoiceLibrary} />
       <Route path="/platform/voices/studio" component={VoiceStudio} />
       <Route path="/platform/stt/playground" component={STTPlayground} />
+      <Route path="/platform/stt/transcripts" component={STTTranscripts} />
       <Route path="/platform/tts/playground" component={TTSPlayground} />
+      <Route path="/platform/tts/projects" component={TTSProjects} />
       <Route path="/platform/analytics" component={Analytics} />
       <Route path="/platform/compliance" component={ComplianceManager} />
-      
+      import Resources from "@/pages/platform/Resources";
+
+      // ...
+
+      <Route path="/platform/settings" component={Settings} />
+      <Route path="/platform/resources" component={Resources} />
+      <Route path="/platform/resources/:tab" component={Resources} />
+      <Route path="/platform/compliance" component={ComplianceManager} />
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
-    </Switch>
+    </Switch >
   );
 }
 
