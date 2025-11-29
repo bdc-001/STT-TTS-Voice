@@ -11,10 +11,15 @@ import {
     Video,
     MessageSquare,
     Github,
-    Play
+    Play,
+    ArrowLeft
 } from "lucide-react";
+import { useRoute, Link } from "wouter";
 
 export default function Resources() {
+    const [match, params] = useRoute("/platform/resources/:tab?");
+    const activeTab = params?.tab;
+
     const resources = [
         {
             title: "Documentation",
@@ -63,6 +68,56 @@ export default function Resources() {
             category: "Best Practices"
         }
     ];
+
+    if (activeTab === "ethics") {
+        return (
+            <DashboardLayout>
+                <div className="p-8">
+                    <div className="mb-8">
+                        <Link href="/platform/resources">
+                            <Button variant="ghost" className="mb-4 pl-0 hover:pl-2 transition-all">
+                                <ArrowLeft className="h-4 w-4 mr-2" />
+                                Back to Resources
+                            </Button>
+                        </Link>
+                        <h1 className="text-3xl font-bold mb-2">Ethical Guidelines</h1>
+                        <p className="text-muted-foreground">
+                            Best practices for responsible AI voice usage
+                        </p>
+                    </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Responsible AI Principles</CardTitle>
+                            <CardDescription>
+                                At Convin Voice AI, we are committed to the ethical development and deployment of AI technologies.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold">1. Consent and Transparency</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Users must always be informed when they are interacting with an AI voice. When using voice cloning, you must have explicit consent from the voice owner.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold">2. Prevention of Harm</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Our platform must not be used to generate content that promotes hate speech, discrimination, harassment, or violence.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-lg font-semibold">3. Data Privacy</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    We protect user data and voice samples with enterprise-grade security. We do not use your private voice data to train our base models without permission.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>

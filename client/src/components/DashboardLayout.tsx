@@ -88,12 +88,7 @@ const navigationItems: NavigationItem[] = [
   {
     label: "Settings",
     icon: Settings,
-    path: "/platform/settings",
-    children: [
-      { label: "API Keys", icon: Key, path: "/platform/settings" },
-      { label: "Usage", icon: Activity, path: "/platform/settings" },
-      { label: "Billing", icon: CreditCard, path: "/platform/settings" }
-    ]
+    path: "/platform/settings"
   },
   {
     label: "Resources",
@@ -142,7 +137,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   };
 
+  // Auto-expand navigation groups based on current path
+  useState(() => {
+    navigationItems.forEach(item => {
+      if (item.children) {
+        const isChildActive = item.children.some(child =>
+          location === child.path || location.startsWith(child.path + "/")
+        );
+        if (isChildActive) {
+          setExpandedItems(prev => Array.from(new Set([...prev, item.label])));
+        }
+      }
+    });
+  });
+
   const isActive = (path: string) => {
+    if (path === "/platform") {
+      return location === path;
+    }
     return location === path || location.startsWith(path + "/");
   };
 
@@ -158,7 +170,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Convin Voice</h1>
+                <h1 className="text-lg font-bold">Voice API</h1>
                 <p className="text-xs text-muted-foreground">Intelligence Platform</p>
               </div>
             </div>

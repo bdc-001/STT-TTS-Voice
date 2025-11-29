@@ -26,9 +26,13 @@ import {
     Download,
     Trash2,
     Calendar,
-    Clock
+    Clock,
+    RefreshCw
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { jobs } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 interface Project {
     id: string;
@@ -37,69 +41,60 @@ interface Project {
     duration: string;
     format: string;
     created: string;
-    status: "ready" | "processing" | "failed";
+    status: "ready" | "processing" | "failed" | "pending" | "completed";
 }
 
 export default function TTSProjects() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [projectList, setProjectList] = useState<Project[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
 
-    // Mock data
-    const projects: Project[] = [
-        {
-            id: "1",
-            name: "Welcome Message - Marketing",
-            voice: "Sarah - Professional",
-            duration: "0:45",
-            format: "MP3",
-            created: "2024-03-15",
-            status: "ready"
-        },
-        {
-            id: "2",
-            name: "Product Demo Narration",
-            voice: "Alex - Empathetic",
-            duration: "2:30",
-            format: "WAV",
-            created: "2024-03-14",
-            status: "ready"
-        },
-        {
-            id: "3",
-            name: "IVR Menu Options",
-            voice: "Emma - Friendly",
-            duration: "1:15",
-            format: "MP3",
-            created: "2024-03-12",
-            status: "ready"
-        },
-        {
-            id: "4",
-            name: "E-learning Module 1",
-            voice: "Marcus - Energetic",
-            duration: "5:20",
-            format: "WAV",
-            created: "2024-03-10",
-            status: "processing"
-        },
-        {
-            id: "5",
-            name: "Podcast Intro",
-            voice: "David - Assertive",
-            duration: "0:30",
-            format: "MP3",
-            created: "2024-03-08",
-            status: "failed"
+    const fetchProjects = async () => {
+        setIsLoading(true);
+        try {
+            const response = await jobs.list();
+            if (response.data.success) {
+                const mappedProjects = response.data.data.map((job: any) => ({
+                    id: job.id,
+                    name: job.type === 'voice_clone' ? 'Voice Clone Project' : 'Voice Design Project', // TODO: Store actual name in job
+                    voice: 'Custom Voice', // Placeholder
+                    duration: '-',
+                    format: 'WAV',
+                    created: new Date(job.created_at).toLocaleDateString(),
+                    status: job.status
+                }));
+                setProjectList(mappedProjects);
+            }
+        } catch (error) {
+            console.error("Failed to fetch projects:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load projects",
+                variant: "destructive",
+            });
+        } finally {
+            setIsLoading(false);
         }
-    ];
+    };
+
+    useEffect(() => {
+        fetchProjects();
+    }, []);
 
     const getStatusColor = (status: string) => {
         switch (status) {
+            case "completed":
             case "ready": return "bg-green-500/10 text-green-500 hover:bg-green-500/20";
             case "processing": return "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20";
             case "failed": return "bg-red-500/10 text-red-500 hover:bg-red-500/20";
             default: return "bg-gray-500/10 text-gray-500";
         }
     };
+
+    const filteredProjects = projectList.filter(project =>
+        project.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <DashboardLayout>
@@ -111,10 +106,18 @@ export default function TTSProjects() {
                             Manage your generated audio files and projects
                         </p>
                     </div>
-                    <Button className="bg-gradient-to-r from-primary to-chart-2">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New Project
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" onClick={fetchProjects} disabled={isLoading}>
+                            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
+                        <Link href="/platform/tts/playground">
+                            <Button className="bg-gradient-to-r from-primary to-chart-2">
+                                <Plus className="h-4 w-4 mr-2" />
+                                New Project
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 <Card>
@@ -149,63 +152,71 @@ export default function TTSProjects() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {projects.map((project) => (
-                                    <TableRow key={project.id}>
-                                        <TableCell className="font-medium">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 rounded-lg bg-muted">
-                                                    <FileAudio className="h-4 w-4 text-primary" />
-                                                </div>
-                                                {project.name}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{project.voice}</TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1 text-muted-foreground">
-                                                <Clock className="h-3 w-3" />
-                                                {project.duration}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{project.format}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1 text-muted-foreground">
-                                                <Calendar className="h-3 w-3" />
-                                                {project.created}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={getStatusColor(project.status)} variant="secondary">
-                                                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button size="icon" variant="ghost" disabled={project.status !== "ready"}>
-                                                    <Play className="h-4 w-4" />
-                                                </Button>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button size="icon" variant="ghost">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem disabled={project.status !== "ready"}>
-                                                            <Download className="h-4 w-4 mr-2" />
-                                                            Download
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-red-600">
-                                                            <Trash2 className="h-4 w-4 mr-2" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
+                                {filteredProjects.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                                            {isLoading ? "Loading projects..." : "No projects found. Create one to get started."}
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ) : (
+                                    filteredProjects.map((project) => (
+                                        <TableRow key={project.id}>
+                                            <TableCell className="font-medium">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-lg bg-muted">
+                                                        <FileAudio className="h-4 w-4 text-primary" />
+                                                    </div>
+                                                    {project.name}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>{project.voice}</TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                    <Clock className="h-3 w-3" />
+                                                    {project.duration}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{project.format}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {project.created}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={getStatusColor(project.status)} variant="secondary">
+                                                    {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button size="icon" variant="ghost" disabled={project.status !== "completed" && project.status !== "ready"}>
+                                                        <Play className="h-4 w-4" />
+                                                    </Button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button size="icon" variant="ghost">
+                                                                <MoreHorizontal className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem disabled={project.status !== "completed" && project.status !== "ready"}>
+                                                                <Download className="h-4 w-4 mr-2" />
+                                                                Download
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem className="text-red-600">
+                                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>

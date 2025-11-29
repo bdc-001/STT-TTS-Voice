@@ -299,6 +299,8 @@ func (h *UserHandler) GetUsage(c *gin.Context) {
 		}
 	}
 
+	h.logger.Infof("Fetching usage for user %d from %v to %v", userID.(uint), startDate, endDate)
+
 	usage, err := h.userService.GetUserUsage(userID.(uint), startDate, endDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, models.ErrorResponse{

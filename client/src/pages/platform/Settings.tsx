@@ -33,10 +33,28 @@ export default function Settings() {
     const [usageData, setUsageData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [newKeyName, setNewKeyName] = useState("");
+    const [activeTab, setActiveTab] = useState("keys");
     const { toast } = useToast();
 
     useEffect(() => {
         fetchData();
+
+        // Set active tab based on URL hash
+        const hash = window.location.hash.replace('#', '');
+        if (hash && ['keys', 'usage', 'billing'].includes(hash)) {
+            setActiveTab(hash);
+        }
+
+        // Listen for hash changes
+        const handleHashChange = () => {
+            const newHash = window.location.hash.replace('#', '');
+            if (newHash && ['keys', 'usage', 'billing'].includes(newHash)) {
+                setActiveTab(newHash);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
 
     const fetchData = async () => {
@@ -122,9 +140,9 @@ export default function Settings() {
                     </p>
                 </div>
 
-                <Tabs defaultValue="api-keys" className="space-y-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList>
-                        <TabsTrigger value="api-keys" className="flex items-center gap-2">
+                        <TabsTrigger value="keys" className="flex items-center gap-2">
                             <Key className="h-4 w-4" />
                             API Keys
                         </TabsTrigger>
@@ -139,93 +157,98 @@ export default function Settings() {
                     </TabsList>
 
                     {/* API Keys Tab */}
-                    <TabsContent value="api-keys">
+                    <TabsContent value="keys">
                         <Card>
                             <CardHeader>
                                 <CardTitle>API Keys</CardTitle>
                                 <CardDescription>
-                                    Manage your API keys for accessing the Convin Voice API.
-                                    Keep these keys secret.
+                                    Manage your API keys for accessing the Convin Voice API. Keep these keys secret.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="flex gap-4 items-end">
-                                    <div className="grid w-full max-w-sm items-center gap-1.5">
-                                        <Label htmlFor="key-name">New Key Name</Label>
+                                <div className="space-y-4">
+                                    <Label htmlFor="new-key-name">New Key Name</Label>
+                                    <div className="flex gap-2">
                                         <Input
-                                            id="key-name"
+                                            id="new-key-name"
                                             placeholder="e.g., Production App"
                                             value={newKeyName}
                                             onChange={(e) => setNewKeyName(e.target.value)}
                                         />
+                                        <Button
+                                            onClick={handleCreateKey}
+                                            disabled={!newKeyName.trim()}
+                                            className="flex items-center gap-2 whitespace-nowrap"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Create Key
+                                        </Button>
                                     </div>
-                                    <Button onClick={handleCreateKey} disabled={!newKeyName.trim()}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Create Key
-                                    </Button>
                                 </div>
 
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Key</TableHead>
-                                            <TableHead>Created</TableHead>
-                                            <TableHead>Last Used</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {apiKeys.length === 0 ? (
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
                                             <TableRow>
-                                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                                                    No API keys found. Create one to get started.
-                                                </TableCell>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Key</TableHead>
+                                                <TableHead>Created</TableHead>
+                                                <TableHead>Last Used</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
                                             </TableRow>
-                                        ) : (
-                                            apiKeys.map((key) => (
-                                                <TableRow key={key.id}>
-                                                    <TableCell className="font-medium">{key.name}</TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-2">
-                                                            <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
-                                                                {key.key.substring(0, 8)}...{key.key.substring(key.key.length - 4)}
-                                                            </code>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {apiKeys.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                                        No API keys found. Create one to get started.
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                apiKeys.map((key) => (
+                                                    <TableRow key={key.id}>
+                                                        <TableCell className="font-medium">{key.name}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2">
+                                                                <code className="bg-muted px-2 py-1 rounded text-xs font-mono">
+                                                                    {key.key.substring(0, 8)}...{key.key.substring(key.key.length - 4)}
+                                                                </code>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6"
+                                                                    onClick={() => copyToClipboard(key.key)}
+                                                                >
+                                                                    <Copy className="h-3 w-3" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>{new Date(key.created_at).toLocaleDateString()}</TableCell>
+                                                        <TableCell>
+                                                            {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={key.is_active ? "default" : "secondary"}>
+                                                                {key.is_active ? "Active" : "Inactive"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
-                                                                className="h-6 w-6"
-                                                                onClick={() => copyToClipboard(key.key)}
+                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => handleDeleteKey(key.id)}
                                                             >
-                                                                <Copy className="h-3 w-3" />
+                                                                <Trash2 className="h-4 w-4" />
                                                             </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{new Date(key.created_at).toLocaleDateString()}</TableCell>
-                                                    <TableCell>
-                                                        {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : "Never"}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant={key.is_active ? "default" : "secondary"}>
-                                                            {key.is_active ? "Active" : "Inactive"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => handleDeleteKey(key.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </CardContent>
                         </Card>
                     </TabsContent>

@@ -34,6 +34,8 @@ import { tts, voices, jobs } from "@/lib/api";
 export default function VoiceStudio() {
   const [designPrompt, setDesignPrompt] = useState("");
   const [consentFile, setConsentFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [consentChecked, setConsentChecked] = useState(false);
   const [tone, setTone] = useState([50]);
   const [breathiness, setBreathiness] = useState([30]);
   const [warmth, setWarmth] = useState([70]);
@@ -109,25 +111,28 @@ export default function VoiceStudio() {
   };
 
   const handleCloneVoice = async () => {
-    if (!consentFile) {
+    if (!audioFile) {
       toast({
         title: "Error",
-        description: "Please upload a consent file",
+        description: "Please upload an audio sample",
         variant: "destructive",
       });
       return;
     }
 
-    // TODO: Get actual audio file from input
-    // For now, we'll just check if consent file is there, but we need the audio sample too.
-    // Assuming there's another state for audio file or we use the same input for simplicity in this demo?
-    // The UI has "Upload Audio Sample" but no state connected to it in the original code?
-    // Let's assume we need to add state for audio file.
+    if (!consentChecked) {
+      toast({
+        title: "Error",
+        description: "Please confirm you have consent",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
       const formData = new FormData();
-      formData.append('file', consentFile); // Using consent file as audio for now since UI is ambiguous
+      formData.append('file', audioFile);
       formData.append('name', "Cloned Voice");
 
       const response = await voices.clone(formData);
@@ -336,14 +341,50 @@ export default function VoiceStudio() {
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
                     <Label>Upload Audio Sample</Label>
-                    <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-                      <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-sm font-medium mb-1">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        WAV, MP3, or M4A (max. 10MB, 30 seconds minimum)
-                      </p>
+                    <div
+                      className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer relative"
+                      onClick={() => document.getElementById('audio-upload')?.click()}
+                    >
+                      <input
+                        type="file"
+                        id="audio-upload"
+                        className="hidden"
+                        accept="audio/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // In a real app, we'd set a separate state for audio file
+                            // For this demo, we'll reuse consentFile or add a new state if we were refactoring fully
+                            // But let's add a new state for clarity
+                            setAudioFile(file);
+                            toast({
+                              title: "File Selected",
+                              description: `Selected: ${file.name}`,
+                            });
+                          }
+                        }}
+                      />
+                      {audioFile ? (
+                        <div className="flex flex-col items-center">
+                          <FileAudio className="h-12 w-12 text-primary mx-auto mb-4" />
+                          <p className="text-sm font-medium mb-1 text-primary">
+                            {audioFile.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {(audioFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <p className="text-sm font-medium mb-1">
+                            Click to upload or drag and drop
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            WAV, MP3, or M4A (max. 10MB, 30 seconds minimum)
+                          </p>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -353,7 +394,7 @@ export default function VoiceStudio() {
                   </div>
 
                   <div className="flex items-start space-x-2 p-4 bg-amber-50 dark:bg-amber-950 rounded-lg">
-                    <Checkbox id="consent" />
+                    <Checkbox id="consent" checked={consentChecked} onCheckedChange={(c) => setConsentChecked(c === true)} />
                     <label
                       htmlFor="consent"
                       className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -362,7 +403,7 @@ export default function VoiceStudio() {
                     </label>
                   </div>
 
-                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2" onClick={handleCloneVoice} disabled={isLoading}>
+                  <Button className="w-full bg-gradient-to-r from-primary to-chart-2" onClick={handleCloneVoice} disabled={isLoading || !audioFile || !consentChecked}>
                     <Copy className="h-4 w-4 mr-2" />
                     {isLoading ? "Cloning..." : "Clone Voice"}
                   </Button>

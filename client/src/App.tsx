@@ -27,6 +27,7 @@ import ComplianceManager from "@/pages/platform/ComplianceManager";
 import TTSProjects from "@/pages/platform/TTSProjects";
 import Settings from "@/pages/platform/Settings";
 import Resources from "@/pages/platform/Resources";
+import EmotionAdaptation from "@/pages/platform/EmotionAdaptation";
 
 function Router() {
   return (
@@ -52,9 +53,7 @@ function Router() {
       <Route path="/platform/tts/projects" component={TTSProjects} />
       <Route path="/platform/analytics" component={Analytics} />
       <Route path="/platform/compliance" component={ComplianceManager} />
-      import Resources from "@/pages/platform/Resources";
 
-      // ...
 
       <Route path="/platform/settings" component={Settings} />
       <Route path="/platform/resources" component={Resources} />
